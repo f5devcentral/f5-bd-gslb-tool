@@ -4,7 +4,7 @@ Welcome to the **F5 CloudServices's GSLB tool** project!
 
 **Verify that this GSLB solution suits your environment without any commitment**. You can try this tool and CloudService's in your existing production infrastructure without any change into your existing deployments.
 
-In this tool you will find an overview of the project. ![See the Wiki for setup and usage documentation](https://github.com/f5devcentral/f5-bd-cloudservices-gslb-tool/wiki). This is a WIP project. Stay tuned.
+In this page you will find an overview of the project. ![See the Wiki for setup and usage documentation](https://github.com/f5devcentral/f5-bd-cloudservices-gslb-tool/wiki). This is a WIP project. Stay tuned.
 
 GSLB tool automatically retrieves **Layer 7 routes** (ie: `https://www.mycompany.com/shop`) from your infrastructure and automatically generates the GSLB configuration. The tool has several utilities which allow the move the workloads across the different deployments.
 
