@@ -2,7 +2,7 @@ Welcome to the **F5 CloudServices's GSLB tool** project!
 
 **GSLB tool allows the automatic creation of GSLB DNS** entries in [F5 CloudServices](https://clouddocs.f5.com/cloud-services/latest/)' DNS LB service. This DNS LB service is a SaaS offering thus allowing to provision GSLB in minutes without provisioning of new infrastructure. 
 
-**Verify this solution suits your environment without any commitment**. You can try this tool and CloudService's in your existing production infrastructure without any change into your existing deployments.
+**Verify that this GSLB solution suits your environment without any commitment**. You can try this tool and CloudService's in your existing production infrastructure without any change into your existing deployments.
 
 In this tool you will find an overview of the project. ![See the Wiki for setup and usage documentation](https://github.com/f5devcentral/f5-bd-cloudservices-gslb-tool/wiki). This is a WIP project. Stay tuned.
 
