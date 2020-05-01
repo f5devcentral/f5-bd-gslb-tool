@@ -1,4 +1,4 @@
-Welcome to the **F5 CloudServices's GSLB tool** project! 
+Welcome to the **GSLB tool** project! 
 
 **GSLB tool allows the automatic creation of GSLB DNS** entries in [F5 CloudServices](https://clouddocs.f5.com/cloud-services/latest/)' DNS LB service. This DNS LB service is a SaaS offering thus allowing to provision GSLB in minutes without provisioning of new infrastructure. 
 
