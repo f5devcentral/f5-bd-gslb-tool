@@ -32,8 +32,8 @@ It's important to understand that whilst the **project-** commands operates on a
 
 ![Operations animation](https://raw.githubusercontent.com/f5devcentral/f5-bd-gslb-tool/master/diagrams/Diagram%20Operations%20overview.gif)
 
-gslb-tool is released to the community under the ![Apache v2 license](https://www.apache.org/licenses/LICENSE-2.0.txt). It is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+gslb-tool is released to the community under the [Apache v2 license](https://www.apache.org/licenses/LICENSE-2.0.txt). It is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-[![CLA assistant](https://cla-assistant.io/readme/badge/f5devcentral/f5-bd-gslb-tool)](https://cla-assistant.io/f5devcentral/f5-bd-gslb-tool)
+![CLA assistant](https://cla-assistant.io/readme/badge/f5devcentral/f5-bd-gslb-tool)](https://cla-assistant.io/f5devcentral/f5-bd-gslb-tool)
 
 
