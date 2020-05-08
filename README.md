@@ -1,4 +1,4 @@
-Welcome to the **GSLB tool** project! 
+Welcome to the **GSLB tool** project! This README is an introduction to the project.
 
 **GSLB tool allows the automatic creation of GSLB DNS** entries in [F5 CloudServices](https://clouddocs.f5.com/cloud-services/latest/)' DNS LB service. This DNS LB service is a SaaS offering thus allowing to provision GSLB in minutes without provisioning of new infrastructure. 
 
@@ -31,4 +31,9 @@ You can perform as many *project-* operations as desired and commit them at once
 It's important to understand that whilst the **project-** commands operates on all the routes of a given project/namespace at a time, the **gslb-** commands operates on the whole source of truth which contains the desired state of the GSLB zone, with all the routes from all project-namespaces. When a **gslb-commit** command is executed it commits all the changes or doesn't commit any since the previous **gslb-commit** no matter how many **project-** operations have been performed previously.
 
 ![Operations animation](https://raw.githubusercontent.com/f5devcentral/f5-bd-gslb-tool/master/diagrams/Diagram%20Operations%20overview.gif)
+
+gslb-tool is released to the community under the [Apache v2 license](https://www.apache.org/licenses/LICENSE-2.0.txt). It is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+[![CLA assistant](https://cla-assistant.io/readme/badge/f5devcentral/f5-bd-gslb-tool)](https://cla-assistant.io/f5devcentral/f5-bd-gslb-tool)
+
 
