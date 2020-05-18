@@ -1,4 +1,4 @@
-Welcome to the **GSLB tool** project! This README is an introduction to the project.
+Welcome to the **GSLB tool** project! This README is an introduction to the project. **GSLB tool is in beta status**.
 
 **GSLB tool allows the automatic creation of GSLB DNS** entries in [F5 CloudServices](https://clouddocs.f5.com/cloud-services/latest/)' DNS LB service. This DNS LB service is a SaaS offering thus allowing to provision GSLB in minutes without provisioning of new infrastructure. 
 
@@ -9,6 +9,8 @@ In this page you will find an overview of the project. ![See the Wiki for setup 
 GSLB tool automatically retrieves **Layer 7 routes** (ie: `https://www.mycompany.com/shop`) from your infrastructure and automatically generates the GSLB configuration. The tool has several utilities which allow the move the workloads across the different deployments.
 
 At present this tool focuses in Openshift clusters and [Route resources](https://docs.openshift.com/container-platform/3.11/architecture/networking/routes.html#route-types) but it could be easily extended to support any other Kubernetes with Ingress resources. GSLB tool has been tested with Openshift 3.x and 4.x.
+
+Please note that **GSLB tool is not tied to any specific Openshfit Router implementation**. GSLB tool can use either RedHat's default Router implementation, BIG-IP, any other implementation or a combination of these.
 
 The different members of a DevOps team can have the tool in their laptops and share the desired configuration in a git repository (source of truth). The overall architecture can be seen in the next diagram.
 
