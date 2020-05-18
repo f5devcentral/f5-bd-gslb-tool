@@ -18,19 +18,20 @@ The different members of a DevOps team can have the tool in their laptops and sh
 
 GSLB tool doesn't require any special installation and doesn't modify your Openshift/K8s cluster (it only performs read-only operations). It is a set of Ansible playbooks and roles to allow  automation happen with a large degree of flexibility. GSLB tool is compromised of the following commands.
 
-**project-** commands perform operations only on the source of truth (the Routes are not manipulated in the Openshift cluster):
+**project-** commands operates on a projec/namespace basis (it's always a parameter) and performs operations only on the local version of the config, prior to updating the source of truth and updating the active/published GSLB config in CloudServices. These commands are:
 
 * **project-retrieve**: retrieves all the routes of the given project/namespace and deployment.
 * **project-populate**: populates (copies) the routes of a given project/namespace from one deployment to another.
 * **project-evacuate**: evacuates (removes) from GSLB all the routes being hosted in the given project/namespace and deployment.
 * **project-ratios**: sets the GSLB ratio for each deployment for a given project/namespace.
 
-You can perform as many *project-* operations as desired and commit them at once into CloudServices. The commands that operate on CloudServices or related have the prefix *gslb-* on their name:
+
+The commands with the **gslb-** prefix don't have as parameter a project/namespace. Instead these operates on all of them:
 
 * **gslb-commit**: publishes into F5 Cloud Services the GSLB configuration stored in the source of truth.
-* **gslb-rollback**: sets in the source of truth the configuration prior to the last commit. Needs that **gslb-commit** is run afterwards to make effective the rollback.
+* **gslb-rollback**: sets in the local config the configuration prior to the last commit. Needs that **gslb-commit** is run afterwards to make effective the rollback.
 
-It's important to understand that whilst the **project-** commands operates on all the routes of a given project/namespace at a time, the **gslb-** commands operates on the whole source of truth which contains the desired state of the GSLB zone, with all the routes from all project-namespaces. When a **gslb-commit** command is executed it commits all the changes or doesn't commit any since the previous **gslb-commit** no matter how many **project-** operations have been performed previously.
+It's important to understand that whilst the **project-** commands operates on all the routes of a given project/namespace at a time. When a **gslb-commit** command is executed it commits all the changes or doesn't commit any since the previous **gslb-commit** no matter how many **project-** operations have been performed previously.
 
 ![Operations animation](https://raw.githubusercontent.com/f5devcentral/f5-bd-gslb-tool/master/diagrams/Diagram%20Operations%20overview.gif)
 
