@@ -26,12 +26,12 @@ GSLB tool doesn't require any special installation and doesn't modify your Opens
 * **project-ratios**: sets the GSLB ratio for each deployment for a given project/namespace.
 
 
-The commands with the **gslb-** prefix don't have as parameter a project/namespace. Instead these operates on all of them:
+Whilst the **project-** commands operates on all the routes of a given project/namespace at a time, the commands with the **gslb-** prefix don't have as parameter a project/namespace. Instead these operates on all of them:
 
-* **gslb-commit**: publishes into F5 Cloud Services the GSLB configuration stored in the source of truth.
+* **gslb-commit**: publishes into F5 Cloud Services the local GSLB configuration and after success stores the succesful change into the source of truth.
 * **gslb-rollback**: sets in the local config the configuration prior to the last commit. Needs that **gslb-commit** is run afterwards to make effective the rollback.
 
-It's important to understand that whilst the **project-** commands operates on all the routes of a given project/namespace at a time. When a **gslb-commit** command is executed it commits all the changes or doesn't commit any since the previous **gslb-commit** no matter how many **project-** operations have been performed previously.
+Please note that when a **gslb-commit** command is executed it commits all the changes or doesn't commit any since the previous **gslb-commit** no matter how many **project-** operations have been performed previously.
 
 ![Operations animation](https://raw.githubusercontent.com/f5devcentral/f5-bd-gslb-tool/master/diagrams/Diagram%20Operations%20overview.gif)
 
