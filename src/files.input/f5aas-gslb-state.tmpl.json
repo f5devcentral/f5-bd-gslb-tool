@@ -1,0 +1,11 @@
+{
+    "dRouter": "%%dRouter%%",
+    "host": "%%host%%",
+    "monitorType": "%%monitorType%%",
+    "project": "%%project%%",
+    "protocol": "%%protocol%%",
+    "publicAddress": %%publicAddress%%,
+    "ratio": "%%ratio%%",
+    "receiveString": "%%receiveString%%",
+    "sendString": "%%sendString%%"
+}

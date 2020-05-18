@@ -1,0 +1,19 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/credentials.yaml"
+    - "vars/setup.yaml"
+    - "vars/gslbState.desired.yaml"
+  module_defaults:
+    group/k8s:
+      host: "{{apiEndpoint[dRouter]}}"
+      validate_certs: false
+#      ca_cert: ca.pem
+  roles: 
+    - k8s-login
+    - f5aas-gslb-init-project-folder
+    - f5aas-gslb-eliminate-project 
+    - ocp-retrieve-routes
+    - f5aas-gslb-add-retrieved-routes
+    - k8s-logout
+

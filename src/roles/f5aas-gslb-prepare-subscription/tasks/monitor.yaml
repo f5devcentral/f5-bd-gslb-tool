@@ -1,0 +1,33 @@
+---
+
+- name: prepare monitor JSON objects, copy the template file
+  delegate_to: localhost
+  shell: |
+    set -e
+    cp "files.input/f5aas-gslb-monitor.tmpl.json" "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-monitor_{{item.protocol}}_{{item.host}}.json"
+
+- name: prepare monitor JSON objects, parametrize the template file
+  delegate_to: localhost
+  replace:
+    path: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-monitor_{{item.protocol}}_{{item.host}}.json"
+    regexp: "{{ inner.expr }}"
+    replace: "{{ inner.replace }}"
+  with_items:
+      - { expr: '%%protocol%%', replace: "{{item.protocol}}" }
+      - { expr: '%%host%%', replace: "{{item.host.split('.')[0]}}.{{GSLB_DOMAIN}}" }
+      - { expr: '%%port%%', replace: "{{item.protocol | regex_replace('https', '443') | regex_replace('http', '80') }}" }
+      - { expr: '%%hostNormalized%%', replace: "{{ item.host.split('.')[0] | regex_replace('[-.]', '_') }}" }
+      - { expr: '%%monitorType%%', replace: "{{item.monitorType}}" }
+      - { expr: '%%sendString%%', replace: "{{item.sendString}}" }
+      - { expr: '%%receiveString%%', replace: "{{item.receiveString}}" }
+  loop_control:
+    loop_var: inner
+
+- name: add monitor JSON document
+  include_tasks: library/json-add-dict-element.yaml
+  vars:
+    node: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-monitor_{{item.protocol}}_{{item.host}}.json"
+    branch: ".configuration.gslb_service.monitors"
+    leaf: ""
+    base: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-update-subscription.tmpl.json"
+

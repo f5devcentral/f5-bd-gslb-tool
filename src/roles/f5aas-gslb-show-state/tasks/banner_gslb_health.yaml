@@ -1,0 +1,21 @@
+---
+
+- name: "prepare banner: GSLB status for virtual_server {{ ir_virtual_server }} of pool {{ ir_pool}}"
+  delegate_to: localhost
+  shell: |
+    export COLUMNS=1000
+    banner "{{ ir_health }}"
+  register: output
+
+- name: "GSLB status for virtual_server {{ ir_virtual_server }} of pool {{ir_pool}}"
+  debug:
+    msg: "{{output.stdout_lines}}"
+
+- name: "GSLB health status for pool {{ir_pool}}"
+  debug:
+    msg:
+    - ">>>> Status details for virtual_server {{ ir_virtual_server }} of pool {{ir_pool}}"
+    - ">"
+    - "> health: {{ir_health}}"
+    - "> details: {{ir_details}}"
+

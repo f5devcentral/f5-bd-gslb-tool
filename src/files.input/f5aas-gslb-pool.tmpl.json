@@ -1,0 +1,13 @@
+{
+        "pool_%%hostNormalized%%": {
+          "display_name": "pool_%%host%%",
+          "enable": true,
+          "rr_type": "A",
+          "ttl": 1,
+          "max_answers": 1,
+          "load_balancing_mode": "ratio-member",
+          "members": [
+          ]
+        }
+}
+

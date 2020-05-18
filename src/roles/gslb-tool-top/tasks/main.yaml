@@ -1,0 +1,32 @@
+- name: add dRouter name
+  lineinfile:
+    path: files.output/gslb-tool-top.cfg
+    line: "DROUTER[{{n_dRouter}}]={{dRouter}}"
+    create: yes
+
+- name: init public address regex
+  set_fact:
+    regex: "\"{{dRouter}}"
+
+- name: create public address regex
+  with_items: "{{publicAddress[dRouter]}}"
+  set_fact:
+    regex: "{{regex}}|{{publicAddress[dRouter][inner]}}"
+  loop_control:
+    loop_var: inner
+
+- name: end public address regex
+  set_fact:
+    regex: "{{regex|replace('.','\\.')}}\""
+
+- name: Add publicAddress of dRouter
+  lineinfile:
+    path: files.output/gslb-tool-top.cfg
+    line: "PUBADDR[{{n_dRouter}}]={{regex}}"
+
+- name: increment iterator
+  set_fact:
+    n_dRouter: "{{ (n_dRouter|int) +1 }}"
+
+
+

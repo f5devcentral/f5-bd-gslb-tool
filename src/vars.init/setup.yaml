@@ -1,0 +1,56 @@
+#
+# DNS name configuration settings.
+#
+# BASE_DOMAIN: is the part of the part of the DNS domain name that is not delegated 
+#              to F5 CloudServices DNS LB.
+# GSLB_ZONE:   is the name prefixed to BASE_DOMAIN that is delegated 
+#              to F5 CloudServices DNS LB.
+#
+GSLB_ZONE: gslb
+BASE_DOMAIN: f5bddemos.io
+#
+# The resulting GSLB domain is "{{GSLB_ZONE}}.{{BASE_DOMAIN}}" and 
+# the GSLB records would be www.ocp.f5bddemos.io, crm.ocp.f5bddemos.io 
+# following the sample values above.
+
+# At present it is only supported either "https" or "http" routes 
+# but not both types simulateneously. 
+# Set this according to your requirements.
+ROUTES_TYPE: "http"
+
+# The next variables are dictionaries that define the topology of the deployments. 
+#
+# A given Openshift/K8s deployment might have one or more routers, and we will
+# assign a diferent name for each (dRouter for short). 
+#
+# Topology variables are indexed by these dRouter names.
+#
+# apiEndpoint:   Contains the URL of the apiEndpoint of each dRouter. Deployments with
+#                several routers will have the same URL for different dRouters. 
+#              
+# publicAddress: Contains the public IP address (host names should not be used) of each dRouter that will be load balanced
+#                by the F5 Cloud Services DNS LB. This IP is unique for each dRouter.
+#
+
+apiEndpoint:
+   onprem: "https://10.105.250.10:8443"
+   aws: "https://api.ocp.myaws.com:6443"
+
+publicAddress:
+   onprem: 
+     default: "13.202.13.146"
+   aws: 
+     az1: "14.48.200.85"
+     az2: "14.49.98.110"
+
+###########################################################################################
+# DO NOT CHANGE THE VARIABLES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
+
+F5AAS_SERVER: api.cloudservices.f5.com
+API_VERSION: v1
+SERVICE_INSTANCE_NAME: "{{GSLB_ZONE}}.{{BASE_DOMAIN}}"
+VERBOSE: "false"
+GSLB_DOMAIN: "{{GSLB_ZONE}}.{{BASE_DOMAIN}}"
+
+
+

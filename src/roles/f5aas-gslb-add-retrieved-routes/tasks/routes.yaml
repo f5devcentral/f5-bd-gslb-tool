@@ -1,0 +1,158 @@
+
+- name: "Processing routes for Host {{item}}"
+  debug:
+    msg: ">> {{item}}"
+  when: VERBOSE == "true"
+
+- name: "initialize folder for host {{item}} with protocol {{protocol}}"
+  delegate_to: localhost
+  shell: |
+    rm -f files.output/gslb-{{GSLB_DOMAIN}}/states/*
+    [ -d files.output/gslb-{{GSLB_DOMAIN}}/states ] && rmdir files.output/gslb-{{GSLB_DOMAIN}}/states
+    mkdir -p files.output/gslb-{{GSLB_DOMAIN}}/states
+
+- name: "set query_expression for TLS hostPaths query"
+  set_fact:
+    query_expression: "{{ 'spec.tls != None' + ' && spec.host == ' + single_quote + item + single_quote }}"
+  when: protocol == "https"
+
+- name: "set query_expression for non-TLS hostPaths query"
+  set_fact:
+    query_expression: "{{ 'spec.tls == None' + ' && spec.host == ' + single_quote + item + single_quote }}"
+  when: protocol == "http"
+
+- name: "Show query_expression for hostPaths"
+  debug:
+    msg: "query_expression: {{query_expression}}"
+  when: VERBOSE == "true"
+
+- name: "Set initial value for sendString and receiveString for GLSB monitor probes"
+  set_fact:
+    sendString: ""
+    receiveString: "(?s)"
+    crLf: '\\\\\\\\r\\\\\\\\n'
+    ecrLf: '\\\\\\\\\\\\\\\\r\\\\\\\\\\\\\\\\n'
+
+- name: Set sendString and receiveString for GSLB monitor probes
+  set_fact:
+    sendString: "{{ sendString + 'GET ' + (inner.path|default('/', true)|regex_replace('(.*[^/])$', '\\1' + '/')) + ' HTTP/1.1' + crLf + 'Host: ' + inner.host.split('.')[0] + '.' + BASE_DOMAIN + crLf + 'User-Agent: F5 Cloud Services' + crLf + crLf}}"
+    receiveString: "{{ receiveString + 'HTTP/1.. 200 OK' + crLf + '.*' }}"
+  with_items: "{{ route_list.resources | json_query(query) }}"
+  loop_control:
+    loop_var: inner
+  vars:
+    query: "[?({{query_expression}})].{host: spec.host, path: spec.path}"
+
+#- name: Set sendString and receiveString for GSLB monitor probes (alt version)
+#  set_fact:
+#    sendString: "{{ 'GET / HTTP/1.1' + crLf + 'Host: ' + item.split('.')[0] + '.' + BASE_DOMAIN + crLf + 'User-Agent: F5 Cloud Services' + crLf + crLf}}"
+#    receiveString: "{{ 'HTTP/1.1 200 OK' + crLf + '.*' }}"
+#  when: true == false
+
+- name: "Append Connection: close headers to sendString"
+  set_fact:
+    sendString: "{{ sendString | regex_replace( ecrLf + ecrLf + '$', ecrLf + 'Connection: close' + ecrLf + ecrLf) }}"
+
+- name: "Show GSLB probing strings for host {{item}}"
+  debug:
+    msg: 
+    - "sendString: {{sendString}}"
+    - "receiveString: {{receiveString}}"
+  when: VERBOSE == "true"
+
+### template processing
+
+- name: "Prepare the gslbState, copy the template file"
+  delegate_to: localhost
+  shell: |
+    set -e
+    cp "files.input/f5aas-gslb-state.tmpl.json" "files.output/gslb-{{GSLB_DOMAIN}}/states/{{protocol}}.{{item}}.json"
+
+#- name: show
+#  debug:
+#    msg: "this publicAddress {{publicAddress[dRouter]}}"
+#
+
+- name: show publicAddress
+  debug:
+    msg: "publicAddress is {{publicAddress[dRouter] | to_json}}"
+  when: VERBOSE == "true"
+
+- name: "calculate #publicAddress"
+  set_fact:
+    n_publicAddress: "{{publicAddress[dRouter] | length}}"
+
+- name: "Prepare the gslbState, parametrize the template file"
+  delegate_to: localhost
+  replace:
+    path: "files.output/gslb-{{GSLB_DOMAIN}}/states/{{protocol}}.{{item}}.json"
+    regexp: "{{ inner.expr }}"
+    replace: "{{ inner.replace }}"
+  with_items:
+      - { expr: '%%dRouter%%', replace: "{{dRouter}}" }
+      - { expr: '%%host%%', replace: "{{item}}" }
+      - { expr: '%%monitorType%%', replace: "{{monitorType}}" }
+      - { expr: '%%project%%', replace: "{{projectName}}" }
+      - { expr: '%%protocol%%', replace: "{{protocol}}" }
+      - { expr: '%%ratio%%', replace: "{{((PROJECT_RETRIEVE_RATIO|int)/(n_publicAddress|int))|round|int}}" }
+      - { expr: '%%receiveString%%', replace: '{{receiveString}}' }
+      - { expr: '%%sendString%%', replace: '{{sendString}}' }  
+  loop_control:
+    loop_var: inner
+
+- name: "Prepare the gslbState, parametrize the template file with publicAddress"
+  delegate_to: localhost
+  replace:
+    path: "files.output/gslb-{{GSLB_DOMAIN}}/states/{{protocol}}.{{item}}.json"
+    regexp: "%%publicAddress%%"
+    replace: "{{publicAddress[dRouter] | to_json}}"
+
+### Add gslbState element into vars/gslbState.request.yaml
+
+- name: include vars/gslbState.desired.yaml again
+  include_vars:
+    file: ../../vars/gslbState.desired.yaml
+
+- name: "Create temporary gslbState file in JSON format"
+  copy: content="{{ gslbState | to_nice_json(8) }}" dest=files.output/gslbState.requested.json
+
+- name: "Name gslbState the array in files.output/gslbState.requested.json"
+  shell: |
+    set -e
+    set -x
+    cp files.output/gslbState.requested.json files.output/gslbState.requested.json.tmp
+    jq -s ' flatten | { gslbState: . }' files.output/gslbState.requested.json.tmp > files.output/gslbState.requested.json
+
+  register: output
+
+- name: show debug
+  debug:
+    msg:
+      - "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: "Add gslbState element into to JSON document"
+  include_tasks: library/json-add-array-element.yaml
+  vars:
+    node: "files.output/gslb-{{GSLB_DOMAIN}}/states/{{protocol}}.{{item}}.json"
+    branch: ".gslbState"
+    base: "files.output/gslbState.requested.json"
+
+- name: "Read the generated file files.output/gslbState.requested.json"
+  shell: cat files.output/gslbState.requested.json
+  register: gslbStateRequestedJson
+
+- name: "Create new gslbState variable with elements in it"
+  set_fact:
+    gslbStateRequested: "{{ gslbStateRequestedJson.stdout | from_json }}"
+  when: gslbStateRequestedJson.stdout != ''
+
+- name: "Save the requested gslbState in vars/gslbState.desired.yaml (with elements in it)"
+  copy: content="{{ gslbStateRequested | to_nice_yaml(indent=2, width=10000) }}" dest=vars/gslbState.desired.yaml
+  when: gslbStateRequestedJson.stdout != ''
+
+- name: "Save the requested gslbState in vars/gslbState.desired.yaml (no elements in it)"
+  copy: content="gslbState:\n" dest=vars/gslbState.desired.yaml
+  when: gslbStateRequestedJson.stdout == ''
+
+

@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -e
+
+usage() {
+
+cat <<USAGE
+
+This command publishes into F5 Cloud Services the GSLB configuration stored in the gslbState.desired.yaml file.
+
+Usage:
+
+gslb-commit "<changelog comment line>"
+
+USAGE
+
+}
+
+#########################################################################################
+
+if [ $# -ne 1 ]; then
+  usage
+  exit 1
+fi
+
+#########################################################################################
+
+set -e
+
+ansible-playbook gslb-commit.yaml
+
+cp vars/gslbState.current.yaml vars/gslbState.current.yaml.old
+cp vars/gslbState.desired.yaml vars/gslbState.current.yaml
+
+now=$(date)
+echo "$now: $1" >> vars/gslbState.log
+
+if [ -r vars/.git ]; then
+
+	echo
+	echo ">>> Commiting changes into GIT repository"
+	echo
+
+	cd vars
+	git add gslbState.current.yaml gslbState.desired.yaml gslbState.log
+	git commit -m "$1"
+	git push origin master
+fi
+

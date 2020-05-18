@@ -1,0 +1,19 @@
+---
+
+- name: F5aaS - Get account details
+  delegate_to: localhost
+  uri:
+    url: https://{{F5AAS_SERVER}}/{{API_VERSION}}/svc-account/user
+    method: GET
+    return_content: yes
+    status_code: 200
+    headers:
+      Accept: application/json
+      Authorization: "Bearer {{ACCESS_TOKEN}}"
+  register: f5aas_account_details
+
+- name: F5aaS - Set fact for ACCOUNT_ID
+  set_fact:
+    ACCOUNT_ID: "{{ f5aas_account_details.json.primary_account_id }}"
+     
+

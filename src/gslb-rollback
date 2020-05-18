@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -e
+
+usage() {
+
+cat <<USAGE
+
+This command restores the gslbState.desired.yaml file using the file gslbState.current.yaml without commiting this configuration into F5 Cloud Services. To complete the rollback it is required to use the gslb-commit afterwards.
+
+Note that in the case that the publishing of the desired GSLB state fails, it is not required to use gslb-rollback because gslb-tool operates in an all or nothing way (atomic semantics).
+
+Usage:
+
+gslb-rollback "<changelog comment line>"
+
+USAGE
+
+}
+
+#########################################################################################
+
+if [ $# -ne 1 ]; then
+  usage
+  exit 1
+fi
+
+#########################################################################################
+
+
+if ! [ -d vars/.git ]; then
+
+	echo
+	echo ">>> Reverting to previous gslb-commit from local files"
+	echo
+
+	cp vars/gslbState.current.yaml.old vars/gslbState.desired.yaml
+else
+
+	echo
+	echo ">>> Reverting to previous gslb-commit from GIT repository"
+	echo
+
+	(cd vars && git revert --no-edit HEAD)	
+fi
+
+now=$(date)
+echo "$now: $1" >> vars/gslbState.log
+
+

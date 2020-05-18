@@ -1,0 +1,9 @@
+           
+           [ 
+            {
+              "virtual_server": "vs_%%virtual_server_name%%",
+              "monitor": "%%monitor%%",
+              "ratio": %%ratio%%
+            }
+           ]
+

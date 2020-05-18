@@ -1,0 +1,34 @@
+
+- name: Get list of Routes 
+  k8s_info:
+    api_key: "{{ k8s_auth_results.k8s_auth.api_key }}"
+    kind: Route
+    namespace: "{{projectName}}"
+#    namespace: "{{dRouter}}-{{projectName}}"
+  register: route_list
+
+- name: Show all
+  debug:
+    msg: "{{ route_list.resources }}"
+  when: VERBOSE == "true"
+
+# TODO: for the time being we only support HTTP or HTTPS routes, and these only using standard ports.
+- name: Show result
+  debug:
+    msg: '{{ resource.spec.tls.termination | default("http") | regex_replace("^(passthrough|edge|reencrypt)$", "https") }} {{ resource.spec.host }} {{ (resource.spec.path|default("/")) }}'
+  when: VERBOSE == "true"
+  with_items: "{{ route_list.resources }}"
+  loop_control:
+    loop_var: resource
+
+#  - dRouter: aws
+#    dRouterAddress: 1.1.1.1
+#    host: productpage-v1
+#    protocol: https
+#    monitorType: https_advanced
+#    project: bookinfo
+#    receiveString: HTTP/1.
+#    sendString: 'GET / HTTP/1.1\\r\\nHost: productpage\\r\\n\\r\\n'
+#    ratio: '40'
+
+

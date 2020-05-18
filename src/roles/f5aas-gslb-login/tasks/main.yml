@@ -1,0 +1,18 @@
+---
+
+- name: F5aaS - Login
+  delegate_to: localhost
+  uri:
+    url: https://{{F5AAS_SERVER}}/{{API_VERSION}}/svc-auth/login
+    method: POST
+    return_content: yes
+    body: "{{ lookup('template','files.input/f5aas-login.json') }}"
+    body_format: json
+    status_code: 200
+  register: f5aas_login
+
+- name: F5aaS - Set fact for ACCESS_TOKEN
+  set_fact:
+    ACCESS_TOKEN: "{{ f5aas_login.json.access_token }}"
+     
+

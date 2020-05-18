@@ -1,0 +1,17 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/setup.yaml"
+    - "vars/setup.gslb-tool-verify.yaml"
+  tasks: 
+    - name: gslb-tool-verify-publicAddress
+      include_role:
+        name: gslb-tool-verify-publicAddress
+
+#    - name: Loop for each dRouter
+#      with_items: "{{ apiEndpoint }}"
+#      include_role:
+#        name: gslb-tool-verify-publicAddress
+#      vars:
+#        dRouter: "{{item}}"
+

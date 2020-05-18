@@ -1,0 +1,38 @@
+#!/bin/bash
+
+fqdn=$1
+server=$2
+
+[ files.output/gslb-tool-top.cfg -ot vars/setup.yaml ] && ansible-playbook gslb-tool-top.yaml
+
+source files.output/gslb-tool-top.cfg
+
+i=$(( ${#DROUTER[@]}-1 ))
+
+while true ; do
+
+        d=$(date +"%H:%M:%S")
+
+#        printf "$d "
+
+	dns=$(dig +short $fqdn @$server)
+
+	for i in `seq 0 $i`; do
+
+		if (echo $dns | egrep -q "(${PUBADDR[$i]})"); then
+			printf "%10s" ${DROUTER[$i]}
+		else 
+			printf "%10s" ""
+                fi
+
+		# printf "%10s" ${DROUTER[$i]}
+        done
+
+	printf "\n"
+
+	sleep 0.7
+done
+
+
+
+

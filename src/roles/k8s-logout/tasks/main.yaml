@@ -1,0 +1,6 @@
+- name: If OCP/K8s login succeeded, try to log out (revoke access token)
+  k8s_auth:
+    state: absent
+    api_key: "{{ k8s_auth_results.k8s_auth.api_key }}"
+  when: k8s_auth_results.k8s_auth.api_key is defined
+

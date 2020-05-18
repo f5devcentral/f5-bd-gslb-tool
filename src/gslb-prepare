@@ -1,0 +1,31 @@
+#!/bin/bash
+
+usage() {
+
+cat <<USAGE
+
+This tool creates a GSLB configuration according the vars/gslbState.requested file but doesn't publish it in F5 CloudServices.
+
+It is not necessary to run this tool before running gslb-commit.sh. This tool is aimed to do a dry-run before running bslb-commit.sh.
+
+Usage:
+
+gslb-prepare
+
+USAGE
+
+}
+
+#########################################################################################
+
+if [ $# -ne 0 ]; then
+  usage
+  exit 1
+fi
+
+#########################################################################################
+
+ansible-playbook gslb-prepare.yaml
+
+
+

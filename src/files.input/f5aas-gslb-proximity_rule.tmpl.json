@@ -1,0 +1,9 @@
+           
+           [ 
+            {
+              "region": "%%region%%",
+              "pool": "pool_vHost_%%uriHostNormalized%%",
+              "score": %%dcscore%%
+            }
+           ]
+

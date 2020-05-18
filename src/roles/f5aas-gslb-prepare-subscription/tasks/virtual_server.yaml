@@ -1,0 +1,38 @@
+---
+
+- name: prepare virtual servers JSON objects, copy the template file
+  delegate_to: localhost
+  shell: |
+    set -e
+    cp "files.input/f5aas-gslb-virtual_server.tmpl.json" "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-virtual_server.{{item.protocol}}.{{item.host}}.{{item.dRouter}}.{{address_item}}.json"
+
+- name: show virtual server to be added
+  debug:
+    msg: ">>>{{item.dRouter}} >> {{address_item}} >> {{inner }}"
+  with_items: "{{ item.publicAddress[address_item] }}"
+  loop_control:
+    loop_var: inner
+  when: VERBOSE == "true"
+
+- name: prepare virtual servers JSON objects, parametrize the template file
+  delegate_to: localhost
+  replace:
+    path: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-virtual_server.{{item.protocol}}.{{item.host}}.{{item.dRouter}}.{{address_item}}.json"
+    regexp: "{{ inner.expr }}"
+    replace: "{{ inner.replace }}"
+  with_items:
+      - { expr: '%%virtual_server_name_normalized%%', replace: "{{item.protocol}}_{{item.host.split('.')[0] | regex_replace('[-.]', '_')}}_{{item.dRouter | regex_replace('[-.]', '_')}}_{{address_item}}"}
+      - { expr: '%%virtual_server_name%%', replace: "{{item.protocol}}_{{item.host.split('.')[0]}}_{{item.dRouter}}_{{address_item}}"}
+      - { expr: '%%publicAddress%%', replace: "{{item.publicAddress[address_item]}}" }
+      - { expr: '%%port%%', replace: "{{item.protocol | regex_replace('https', '443') | regex_replace('http', '80') }}" }
+  loop_control:
+    loop_var: inner
+
+- name: add virtual server to JSON document
+  include_tasks: library/json-add-dict-element.yaml
+  vars:
+    node: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-virtual_server.{{item.protocol}}.{{item.host}}.{{item.dRouter}}.{{address_item}}.json"
+    branch: ".configuration.gslb_service.virtual_servers"
+    leaf: ""
+    base: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-update-subscription.tmpl.json"
+

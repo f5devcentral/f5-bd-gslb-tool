@@ -1,0 +1,14 @@
+
+---
+
+- name: "pool_drouter_loop.yaml: show iterator"
+  debug:
+    msg: "pool_drouter_loop.yaml: iterator is {{inner}}"
+  when: VERBOSE == "true"
+
+- name: "loop for preparing pool member JSON objects, for dRouter {{inner.dRouter}}"
+  include_tasks: pool_drouter_members.yaml
+  with_items: "{{ inner.publicAddress }}"
+  loop_control:
+    loop_var: address_item
+

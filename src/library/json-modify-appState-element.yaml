@@ -1,0 +1,43 @@
+---
+
+- name: json-modify-appState-element/show element
+  debug:
+    msg: "{{ element }}"
+
+- name: json-modify-appState-element/show key and value
+  debug:
+    msg: "{{ key }} {{ value }}"
+
+#- name: json-modify-appState-element/test
+#  set_fact:
+#    testState: "{{ newState | default(appState) }}"
+#
+#- name: json-modify-appState-element/show test
+#  debug:
+#    msg: "{{ testState }}"
+
+- name: json-modify-appState-element/appState without current application item
+  set_fact:
+    diffState: "{{ newState | default(appState) | difference(element) }}"
+
+#- name: json-modify-appState-element/show diff
+#  debug:
+#    msg: "{{ diffState }}"
+
+- name: json-modify-appState-element/change application state 
+  set_fact:
+    new_element: "{{ element | combine({ key: value}) }}"
+
+#- name: json-modify-appState-element/show new element
+#  debug:
+#    msg: "{{ new_element }}"
+
+- name: json-modify-appState-element/crete new appState variable
+  set_fact:
+    newState: "{{diffState + [new_element] }}"
+
+- name: json-modify-appState-element/new appState
+  debug:
+    msg: "{{ newState }}"
+
+

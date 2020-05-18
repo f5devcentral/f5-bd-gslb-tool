@@ -1,0 +1,7 @@
+
+- name: "Log in OCP/K8s (obtain access token) in dRouter {{dRouter}}"
+  k8s_auth:
+    username: "{{ k8s_user[dRouter] }}"
+    password: "{{ k8s_pass[dRouter] }}"
+  register: k8s_auth_results
+

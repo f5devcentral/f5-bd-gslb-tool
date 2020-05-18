@@ -1,0 +1,43 @@
+---
+
+- name: debug proximity rules
+  debug:
+    msg: "debug pool member: looping with {{item}} {{address_item}}"
+  when: VERBOSE == "true"
+
+- name: prepare the proximity rule JSON object, copy the template file
+  delegate_to: localhost
+  shell: |
+    set -e
+    cp "files.input/f5aas-gslb-pool_member.tmpl.json" "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-pool_member.{{inner.protocol}}.{{inner.host}}.{{inner.dRouter}}.{{address_item}}.json"
+
+- name: show pool member to be added
+  debug:
+    msg: ">>>{{inner.dRouter}} >> {{address_item}} >> {{inner2}}"
+  with_items: "{{ inner.publicAddress[address_item] }}"
+  loop_control:
+    loop_var: inner2
+  when: VERBOSE == "true"
+
+- name: prepare the pool member JSON object, parametrize the template file
+  delegate_to: localhost
+  replace:
+    path: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-pool_member.{{inner.protocol}}.{{inner.host}}.{{inner.dRouter}}.{{address_item}}.json"
+    regexp: "{{ inner2.expr }}"
+    replace: "{{ inner2.replace }}"
+  with_items:
+      - { expr: '%%virtual_server_name%%', replace: "{{inner.protocol}}_{{inner.host.split('.')[0] | regex_replace('[-.]', '_')}}_{{inner.dRouter | regex_replace('[-.]', '_')}}_{{address_item}}"}
+      - { expr: '%%ratio%%', replace: "{{inner.ratio}}" }
+      - { expr: '%%monitor%%', replace: "monitor_{{inner.protocol}}_{{ inner.host.split('.')[0] | regex_replace('[-.]', '_') }}" }
+  loop_control:
+    loop_var: inner2
+
+- name: add pool member to JSON document
+  include_tasks: library/json-add-dict-element.yaml
+  vars:
+    node: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-pool_member.{{inner.protocol}}.{{inner.host}}.{{inner.dRouter}}.{{address_item}}.json"
+    branch: ".configuration.gslb_service.pools.\"pool_{{ inner.host.split('.')[0] | regex_replace('[-.]', '_') }}\".members"
+    leaf: ""
+    base: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-update-subscription.tmpl.json"
+
+

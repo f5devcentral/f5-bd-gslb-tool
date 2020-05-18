@@ -1,0 +1,43 @@
+---
+
+# This version avoids merging when '{{branch}}."{{leaf}}" already has components, avoiding eliminating previous entries when adding {{ branch }}
+
+- name: "add JSON object in file {{ node }} to {{ branch }} in document {{ base }}"
+  delegate_to: localhost
+  shell: |
+    set -e
+    set -x
+
+    declare -i retval
+    retval=0
+
+    if [ -n "{{ leaf }}" ] ; then
+       retval=$(jq '{{branch}}."{{leaf}}" | length' {{ base }} )
+    fi
+
+    [ "$retval" -ne "0" ] && exit 0
+
+    jq --argjson node "$(< {{ node }} )" '{{ branch }} += $node ' {{ base }} > {{ base }}.tmp
+    cp {{ base }}.tmp {{ base }}
+
+  register: output
+
+- name: show debug
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: retrieve result
+  delegate_to: localhost
+  shell: |
+    cat {{ base }}
+  register: output
+
+- name: show result
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stdout }}"
+  when: VERBOSE == "true"
+    
+

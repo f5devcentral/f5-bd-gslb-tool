@@ -1,0 +1,31 @@
+---
+
+- name: prepare the load balanced record JSON object, copy the template file
+  delegate_to: localhost
+  shell: |
+    set -e
+    set -x
+    cp "files.input/f5aas-gslb-load_balanced_record-global.tmpl.json" "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-load_balanced_record-global.{{ item.host }}.json"
+
+- name: prepare the load balanced record JSON object, parametrize the template file
+  delegate_to: localhost
+  replace:
+    path: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-load_balanced_record-global.{{ item.host }}.json"
+    regexp: "{{ inner.expr }}"
+    replace: "{{ inner.replace }}"
+  with_items:
+      - { expr: '%%host%%', replace: "{{ item.host.split('.')[0] }}" }
+      - { expr: '%%hostNormalized%%', replace: "{{ item.host.split('.')[0] | regex_replace('[-.]', '_') }}" }
+      - { expr: '%%alias%%', replace: "{{ item.host | regex_replace('\\..*', '') }}" }
+  loop_control:
+    loop_var: inner
+
+- name: add load balanced record to JSON document
+  include_tasks: library/json-add-dict-element.yaml
+  vars:
+    node: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-load_balanced_record-global.{{ item.host }}.json"
+    branch: ".configuration.gslb_service.load_balanced_records"
+    leaf: "{{ item.host | regex_replace('[-.]', '_') }}"
+    base: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-update-subscription.tmpl.json"
+
+

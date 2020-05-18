@@ -1,0 +1,10 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/setup.yaml"
+    - "vars/gslbState.desired.yaml"
+  roles: 
+    - { role: f5aas-gslb-eliminate-project, dRouter: "{{dstOcpAlias}}" }
+    - f5aas-gslb-populate-project
+
+

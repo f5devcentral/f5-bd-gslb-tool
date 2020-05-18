@@ -1,0 +1,8 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/setup.yaml"
+    - "vars/gslbState.desired.yaml"
+  roles: 
+    - f5aas-gslb-project-ratios
+

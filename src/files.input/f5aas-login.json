@@ -1,0 +1,5 @@
+{
+    "username": "{{F5AAS_USER}}",
+    "password": "{{F5AAS_PASS}}"
+}
+

@@ -1,0 +1,48 @@
+---
+
+- name: "pool.yaml: show iterator"
+  debug:
+    msg: "pool.yaml: iterator is {{item}}"
+  when: VERBOSE == "true"
+
+- name: prepare pool JSON objects, copy the template file
+  delegate_to: localhost
+  shell: |
+    set -e
+    cp "files.input/f5aas-gslb-pool.tmpl.json" "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-pool_{{item.host}}.json"
+
+- name: prepare pool JSON objects, parametrize the template file
+  delegate_to: localhost
+  replace:
+    path: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-pool_{{item.host}}.json"
+    regexp: "{{ inner.expr }}"
+    replace: "{{ inner.replace }}"
+  with_items:
+      - { expr: '%%host%%', replace: "{{ item.host.split('.')[0] }}" }
+      - { expr: '%%hostNormalized%%', replace: "{{ item.host.split('.')[0] | regex_replace('[-.]', '_') }}" }
+  loop_control:
+    loop_var: inner
+
+- name: add pool JSON document
+  include_tasks: library/json-add-dict-element.yaml
+  vars:
+    node: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-pool_{{item.host}}.json"
+    branch: ".configuration.gslb_service.pools"
+    leaf: ""
+    base: "files.output/gslb-{{GSLB_DOMAIN}}/f5aas-gslb-update-subscription.tmpl.json"
+
+- name: "set query for pool members for host {{ item.host }}"
+  set_fact:
+    query_pool_members: "[?(({{query_expression}}) && (host == '{{item.host}}'))].{protocol: protocol, host: host, ratio: ratio, dRouter: dRouter, publicAddress: publicAddress }"
+
+- name: show
+  debug:
+    msg: "{{query_pool_members}}"
+  when: VERBOSE == "true"
+
+- name: prepare the pool JSON object, create pool members
+  include_tasks: pool_drouter_loop.yaml
+  with_items: '{{ gslbState | json_query(query_pool_members) }}'
+  loop_control: 
+    loop_var: inner
+

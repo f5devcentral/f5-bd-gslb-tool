@@ -1,0 +1,52 @@
+- name: set convinience variables
+  set_fact: 
+    single_quote: "'"
+
+#### loop over the unique hosts for tls and non tls indepdently
+
+# non-TLS
+
+- name: "set projectHosts: select non-TLS routes out of project routes"
+  set_fact:
+    query_expression: "spec.tls == None"
+  when: ROUTES_TYPE == "http"
+
+- name: "set projectHosts: stored in variable using route_list.resources"
+  set_fact:
+    projectHosts: "{{ route_list.resources | json_query(query) | unique}}"
+  vars:
+    query: "[?({{query_expression}})].spec.host"
+  when: ROUTES_TYPE == "http"
+
+- name: "Processing non-TLS routes for each host"
+  include_tasks: routes.yaml
+  with_items: "{{ projectHosts }}"
+  vars:
+    monitorType: "http_advanced"
+    protocol: "http"
+  when: ROUTES_TYPE == "http"
+
+# - meta: end_play
+
+# TLS hosts
+
+- name: "set projectHosts: select TLS routes out of project routes"
+  set_fact:
+    query_expression: "spec.tls != None"
+  when: ROUTES_TYPE == "https"
+
+- name: "set projectHosts: stored in variable using route_list.resources"
+  set_fact:
+    projectHosts: "{{ route_list.resources | json_query(query) | unique}}"
+  vars:
+    query: "[?({{query_expression}})].spec.host"
+  when: ROUTES_TYPE == "https"
+
+- name: "Processing TLS routes for each host"
+  include_tasks: routes.yaml
+  with_items: "{{ projectHosts }}"
+  vars:
+    monitorType: "https_advanced"
+    protocol: "https"
+  when: ROUTES_TYPE == "https"
+

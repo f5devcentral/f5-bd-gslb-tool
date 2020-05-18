@@ -1,0 +1,32 @@
+---
+
+- name: "make sure elements are unique in array {{ branch }} of document {{ base }}"
+  delegate_to: localhost
+  shell: |
+    set -e
+    set -x
+
+    jq 'unique_by({{ branch }})' {{ base }} > {{ base }}.tmp
+    cp {{ base }}.tmp {{ base }}
+
+  register: output
+
+- name: show debug
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: retrieve result
+  delegate_to: localhost
+  shell: |
+    cat {{ base }}
+  register: output
+
+- name: show result
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stdout }}"
+  when: VERBOSE == "true"
+    
+

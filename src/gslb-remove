@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -e
+
+usage() {
+
+cat <<USAGE
+
+This tool eliminates all the GSLB configuration for the configured GSLB_DOMAIN in the vars/setup.yaml file. 
+
+Note that this tool eliminates all configuration regardless the vars/gslbState.desired.yaml contents.
+
+Usage:
+
+gslb-remove "<changelog comment line>"
+
+USAGE
+
+}
+
+#########################################################################################
+
+if [ $# -ne 1 ]; then
+  usage
+  exit 1
+fi
+
+#########################################################################################
+
+set -e
+
+cp vars.init/gslbState.desired.yaml vars/gslbState.desired.yaml
+
+ansible-playbook gslb-remove.yaml
+
+cp vars/gslbState.desired.yaml vars/gslbState.current.yaml
+
+now=$(date)
+echo "$now: $1" >> vars/gslbState.log
+
+if [ -r vars/.git ]; then
+
+	echo
+	echo ">>> Commiting changes into GIT repository"
+	echo
+
+	cd vars
+	git add gslbState.current.yaml gslbState.desired.yaml gslbState.log
+	git commit -m "$1"
+	git push origin master
+fi
+

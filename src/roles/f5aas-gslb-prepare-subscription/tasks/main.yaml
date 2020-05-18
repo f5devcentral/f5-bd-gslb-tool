@@ -1,0 +1,55 @@
+---
+
+- name: "initialize folder for GSLB_DOMAIN {{GSLB_DOMAIN}}"
+  delegate_to: localhost
+  shell: |
+    rm -f files.output/gslb-{{GSLB_DOMAIN}}/*
+    [ -d files.output/gslb-{{GSLB_DOMAIN}} ] && rmdir files.output/gslb-{{GSLB_DOMAIN}}
+    mkdir -p files.output/gslb-{{GSLB_DOMAIN}}
+    cp files.input/f5aas-gslb-update-subscription.tmpl.json files.output/gslb-{{GSLB_DOMAIN}}
+
+- name: set convinience variables
+  set_fact: 
+    single_quote: "'"
+
+- name: build query expression for gslb variable
+  set_fact:
+    query_expression: "*"
+
+- name: set gslbSelect variable to all dRouter
+  set_fact:
+    gslbSelect: "{{ gslbState | json_query(query) | unique}}"
+  vars:
+    query: "[?({{query_expression}})].dRouter"
+
+- name: show gslbSelect
+  debug:
+    msg: "gslbSelect is {{ gslbSelect }}"
+  when: VERBOSE == "true"
+ 
+- name: add virtual server JSON objects
+  include_tasks: virtual_server_drouter_loop.yaml
+  with_items: '{{ gslbState | json_query(query) }}'
+  vars:
+    # regex_replace is not being allowed to be used: 'JMESPathError in json_query filter plugin:\nUnknown function: regex_replace'
+    query: "[?({{query_expression}})].{ dRouter: dRouter, host: host, protocol: protocol, publicAddress: publicAddress }"
+
+- name: add pool JSON objects
+  include_tasks: pool.yaml
+  with_items: '{{ gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ host: host, dRouter: dRouter }"
+
+- name: add load balanced record JSON objects
+  include_tasks: load_balanced_record.yaml
+  with_items: '{{ gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ host: host }"
+
+- name: add monitor JSON objects 
+  include_tasks: monitor.yaml
+  with_items: '{{ gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ protocol: protocol, host: host, monitorType: monitorType, sendString: sendString, receiveString: receiveString }"
+
+
