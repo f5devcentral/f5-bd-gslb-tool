@@ -33,7 +33,11 @@ Whilst the **project-** commands operates on all the routes of a given project/n
 
 Please note that when a **gslb-commit** command is executed it commits all the changes or doesn't commit any since the previous **gslb-commit** no matter how many **project-** operations have been performed previously.
 
+The next animation will give you a hint of tool's operation.
+
 ![Operations animation](https://raw.githubusercontent.com/f5devcentral/f5-bd-gslb-tool/master/diagrams/Diagram%20Operations%20overview.gif)
+
+To see an actual demo of the tool please check ![this video in youtube](https://www.youtube.com/watch?v=TiAMINSBPns).
 
 gslb-tool is released to the community under the [Apache v2 license](https://www.apache.org/licenses/LICENSE-2.0.txt). It is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
