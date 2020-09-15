@@ -1,6 +1,6 @@
 {
         "monitor_%%protocol%%_%%hostNormalized%%": {
-          "display_name": "monitor_%%protocol%%_%%host%%",
+          "display_name": "%%monitor_display_name%%",
           "monitor_type": "%%monitorType%%",
           "target_port": %%port%%,
           "send": "%%sendString%%",

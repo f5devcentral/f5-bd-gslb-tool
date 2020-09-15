@@ -14,6 +14,7 @@
     replace: "{{ inner.replace }}"
   with_items:
       - { expr: '%%protocol%%', replace: "{{item.protocol}}" }
+      - { expr: '%%monitor_display_name%%', replace: "mon_{{item.protocol}}_{{item.host.split('.')[0]}}" } # monitor_%%protocol%%_%%host%%
       - { expr: '%%host%%', replace: "{{item.host.split('.')[0]}}.{{GSLB_DOMAIN}}" }
       - { expr: '%%port%%', replace: "{{item.protocol | regex_replace('https', '443') | regex_replace('http', '80') }}" }
       - { expr: '%%hostNormalized%%', replace: "{{ item.host.split('.')[0] | regex_replace('[-.]', '_') }}" }
