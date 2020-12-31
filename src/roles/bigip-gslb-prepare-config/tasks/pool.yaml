@@ -28,6 +28,7 @@
       with_items:
           - { expr: '%%poolGslbRecordNormalized%%', replace: "pool_{{ item.host | regex_replace('[-.]', '_') }}" }
           - { expr: "'", replace: '"' }
+          - { expr: '%%ttl%%', replace: "{{item.ttl}}" }
       loop_control:
         loop_var: inner
   when: check_outfile.stat.exists == false

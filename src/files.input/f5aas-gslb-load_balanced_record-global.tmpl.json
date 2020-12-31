@@ -13,8 +13,8 @@
               "score": 100 
             }
           ],
-          "persistence": yes,
-          "persist_cidr_ipv4": 24,
+          "persistence": true,
+          "persist_cidr_ipv4": %%ttl_ipv4_prefix%%,
           "persist_cidr_ipv6": 56,
           "persistence_TTL": %%ttl%%
         }

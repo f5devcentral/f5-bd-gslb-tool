@@ -1,0 +1,11 @@
+
+- name:
+  shell: |
+    set -e
+    set -x
+    cat files.output/gslbState.requested.json | jq '.gslbState[] | if .project == "{{projectName}}" then .ttl = "{{ttl}}" else . end' | jq -s '{ gslbState: . }' > files.output/gslbState.requested.json.tmp
+    cp files.output/gslbState.requested.json.tmp files.output/gslbState.requested.json
+
+  register: output
+
+

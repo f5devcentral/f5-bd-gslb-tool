@@ -41,7 +41,7 @@
       - { expr: '%%host%%', replace: "{{item}}" }
       - { expr: '%%project%%', replace: "{{projectName}}" }
       - { expr: '%%ratio%%', replace: "{{((PROJECT_RETRIEVE_RATIO|int)/(n_publicAddress|int))|round|int}}" }
-      - { expr: '%%ttl%%', replace: "{{PROJECT_DEFAULT_TTL}}" }
+      - { expr: '%%ttl%%', replace: "{{TTL_DEFAULT}}" }
   loop_control:
     loop_var: inner
 

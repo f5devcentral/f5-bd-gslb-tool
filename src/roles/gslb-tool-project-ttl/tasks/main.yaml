@@ -13,10 +13,6 @@
 #    msg: "l7router: {{item.key}}, ratio: {{item.value}}"
 #  when: VERBOSE == "true"
 
-- name: "Set variable with the number of l7router/ratios requested"
-  set_fact: 
-    requested_n: "{{ ratios | length }}"
-
 - name: "Set query expression for retrieving l7router elements in current uncommited state"
   set_fact:
     query_expression: "[?( {{ 'project == ' + single_quote + projectName + single_quote }})]"
@@ -39,15 +35,6 @@
   debug:
     msg: "{{gslbElements}}"
   when: VERBOSE == "true"
-
-- name: "Set variable with the number of matching elements from current uncommited gslbState"
-  set_fact:
-    current_n: "{{gslbElements | json_query('[].l7router') | unique | length}}"
-
-- name: "Check if number of l7router/ratios elements differs from elements in current uncommited gslbState"
-  fail:
-   msg: "The number of elements in request ({{requested_n}}) must match the number of elements in current uncommited gslbState for ({{current_n}}) the given project ({{projectName}})"
-  when: requested_n != current_n
 
 - name: "Create temporary gslbState in JSON format"
   copy: content="{{ gslbState | to_nice_json(8) }}" dest=files.output/gslbState.requested.json
@@ -78,8 +65,7 @@
   when: VERBOSE == "true"
 
 - name: "Set ratios for each l7router for project {{project}}"
-  include_tasks: project_ratio.yaml
-  with_dict: "{{ ratios }}"
+  include_tasks: project_ttl.yaml
 
 - name: "Read the generated file files.output/gslbState.requested.json"
   shell: cat files.output/gslbState.requested.json

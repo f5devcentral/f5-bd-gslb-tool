@@ -33,6 +33,7 @@
       with_items:
           - { expr: '%%host%%', replace: "{{ item.host.split('.')[0] }}" }
           - { expr: '%%hostNormalized%%', replace: "{{ item.host.split('.')[0] | regex_replace('[-.]', '_') }}" }
+          - { expr: '%%ttl%%', replace: "{{item.ttl}}" }
       loop_control:
         loop_var: inner
   when: check_outfile.stat.exists == false

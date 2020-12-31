@@ -40,7 +40,7 @@
   include_tasks: pool.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ host: host, l7router: l7router }"
+    query: "[?({{query_expression}})].{ host: host, l7router: l7router, ttl: ttl }"
 
 - name: add monitors for pools JSON objects 
   include_tasks: monitor_pools.yaml

@@ -30,7 +30,7 @@
   include_tasks: pool.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ host: host }"
+    query: "[?({{query_expression}})].{ host: host, ttl: ttl }"
 
 ### load balanced records
 
@@ -38,7 +38,7 @@
   include_tasks: load_balanced_record.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ host: host }"
+    query: "[?({{query_expression}})].{ host: host, ttl: ttl }"
 
 ### monitors
 
