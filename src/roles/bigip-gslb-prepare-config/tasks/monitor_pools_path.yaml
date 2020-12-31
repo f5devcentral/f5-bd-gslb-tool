@@ -1,0 +1,67 @@
+---
+
+- name: "monitors: normalize {{path}}"
+  set_fact:
+    pathNormalized: "{{path | regex_replace('/', '_')}}"
+
+- name: "Generating file name for monitor >>> {{protocol}} >> {{item.host}} > {{pathNormalized}}"
+  set_fact:
+    outfile: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-monitor_{{protocol}}_{{item.host}}_{{pathNormalized}}.json"
+
+- name: "Stat file {{outfile}}"
+  stat: 
+    path: "{{outfile}}"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile
+
+- name: "Generating file for monitor >>> {{protocol}} >> {{item.host}} > {{pathNormalized}}"
+  block:
+    - name: prepare monitor JSON objects, copy the template file
+      delegate_to: localhost
+      shell: |
+        set -e
+        cp "files.input/bigip-gslb-monitor.tmpl.json" "{{outfile}}"
+
+    - name: prepare monitor JSON objects, parametrize the template file
+      delegate_to: localhost
+      replace:
+        path: "{{outfile}}"
+        regexp: "{{ inner.expr }}"
+        replace: "{{ inner.replace }}"
+      with_items:
+          - { expr: '%%protocol%%', replace: "{{protocol}}" }
+          - { expr: '%%host%%', replace: "{{item.host.split('.')[0]}}" }
+          - { expr: '%%hostNormalized%%', replace: "{{ item.host.split('.')[0] | regex_replace('[-.]', '_') }}" }
+          - { expr: '%%domain%%', replace: "{{BASE_DOMAIN}}" }
+          - { expr: '%%path%%', replace: "{{path}}" }
+          - { expr: '%%pathNormalized%%', replace: "{{pathNormalized}}" }
+          - { expr: '%%port%%', replace: "{{protocol | regex_replace('https', '443') | regex_replace('http', '80') }}" }
+          - { expr: '%%monitorType%%', replace: "{{monitorType}}" }
+      loop_control:
+        loop_var: inner
+  when: check_outfile.stat.exists == false
+
+- name: "Stat file {{outfile}}.included"
+  stat:
+    path: "{{outfile}}.included"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile_included
+
+- name: conditionally add monitor JSON document
+  block:
+    - name: add monitor JSON document
+      include_tasks: library/json-add-dict-element.yaml
+      vars:
+        node: "{{outfile}}"
+        branch: ".Common.Shared"
+        leaf: ""
+        base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json"
+
+    - name: mark file as included
+      file:
+        path: "{{outfile}}.included"
+        state: touch
+  when: check_outfile_included.stat.exists == false
+

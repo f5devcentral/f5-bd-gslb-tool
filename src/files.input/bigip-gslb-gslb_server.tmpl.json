@@ -1,0 +1,22 @@
+      {
+            "%%gslbServer%%": {
+                "class": "GSLB_Server",
+                "dataCenter": {
+                    "bigip": "/Common/%%dataCenter%%"
+                },
+                "virtualServers": [
+                ],
+                "devices": [{ "address": "%%publicAddress%%"}],
+                "serverType": "generic-host",
+                "monitors": [
+                   {
+                      "use": "/Common/Shared/monitor_tcp_80"
+                   },
+                   {
+                      "use": "/Common/Shared/monitor_tcp_443"
+                   }
+                ]
+            }
+
+       }
+

@@ -1,0 +1,10 @@
+        { 
+            "%%gslbRecordNormalized%%": {
+                "class": "GSLB_Domain",
+                "domainName": "%%gslbRecord%%",
+                "resourceRecordType": "A",
+                "pools": [
+                              { "use": "%%poolGslbRecordNormalized%%" }
+                ]
+            }
+        }

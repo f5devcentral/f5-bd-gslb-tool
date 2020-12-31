@@ -1,0 +1,10 @@
+        {
+            "%%poolGslbRecordNormalized%%": {
+                "class": "GSLB_Pool",
+                "resourceRecordType": "A",
+                "lbModePreferred": "ratio",
+                "members": [],
+                "monitors": []
+            }
+        }
+

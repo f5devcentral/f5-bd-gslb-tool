@@ -1,0 +1,55 @@
+---
+
+
+- name: retrieve base file
+  delegate_to: localhost
+  shell: |
+    cat {{ base }}
+  register: output
+  when: VERBOSE == "true"
+
+- name: show result
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stdout }}"
+  when: VERBOSE == "true"
+
+#- name: "show jq command"
+#  debug:
+#    msg: 'jq --argjson node "$(< {{ node }} )" '{{ branch }} |= . + [$node] ' {{ base }}'
+#  when: VERBOSE == "true"
+
+- name: "add JSON object in file {{ node }} to array {{ branch }} in document file {{ base }}"
+  delegate_to: localhost
+  shell: |
+    set -e
+    set -x
+
+    declare -i retval
+    retval=0
+
+    jq --argjson node "$(< {{ node }} )" '{{ branch }} |= . + [$node] ' {{ base }} > {{ base }}.tmp
+    cp {{ base }}.tmp {{ base }}
+
+  register: output
+
+- name: show debug
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: retrieve result
+  delegate_to: localhost
+  shell: |
+    cat {{ base }}
+  register: output
+  when: VERBOSE == "true"
+
+- name: show result
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stdout }}"
+  when: VERBOSE == "true"
+    
+

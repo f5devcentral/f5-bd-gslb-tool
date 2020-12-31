@@ -1,0 +1,21 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/setup.yaml"
+  tasks:
+    - name: Remove previous gslb-toop variables file (delete file)
+      file:
+        path: files.out/gslb-tool-top.cfg
+        state: absent
+
+    - name: Initialize n_l7router
+      set_fact:
+         n_l7router: 0
+
+    - name: Write gslb-tool-top variables
+      with_items: "{{ apiEndpoint }}"
+      include_role: 
+        name: gslb-tool-top
+      vars:
+        l7router: "{{item}}"
+

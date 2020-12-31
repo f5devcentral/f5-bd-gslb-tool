@@ -1,0 +1,13 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/credentials.yaml"
+    - "vars/setup.yaml"
+  roles: 
+    - role: f5aas-gslb-login
+    - role: f5aas-gslb-get-account-details
+    - role: f5aas-gslb-unpublish-subscription
+    - role: f5aas-gslb-logout
+
+
+

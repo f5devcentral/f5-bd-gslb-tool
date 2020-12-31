@@ -1,0 +1,8 @@
+---
+
+- name: "loop for preparing Gslb Server JSON objects, for l7router {{item.l7router}}"
+  include_tasks: gslb_server.yaml
+  with_items: "{{ item.publicAddress }}"
+  loop_control:
+    loop_var: address_item
+

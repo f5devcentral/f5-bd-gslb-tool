@@ -1,0 +1,58 @@
+---
+
+
+- name: retrieve base file
+  delegate_to: localhost
+  shell: |
+    cat {{ base }}
+  register: output
+  when: VERBOSE == "true"
+
+- name: show result
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stdout }}"
+  when: VERBOSE == "true"
+
+- name: "add JSON object in file {{ node }} to array {{ branch }} in document file {{ base }}"
+  delegate_to: localhost
+  shell: |
+    set -e
+    set -x
+
+    declare -i retval
+    retval=0
+
+    jq --argjson node "$(< {{ node }} )" '{{ branch }} += [$node] ' {{ base }} > {{ base }}.tmp
+
+    jq ".[].use=\"\"" "files.output/gslb-{{GSLB_DOMAIN}}/bigip-gslb-pool_{{item.host}}.json"
+  register: json
+
+#{entry_date:"\(.entry_day) \(.entry_month)"})'
+#double_quote + '/Common/Shared/monitor_' + protocol + '_' + item.host.split('.')[0] + double_quote + '}' }}"
+
+
+    cp {{ base }}.tmp {{ base }}
+
+  register: output
+
+- name: show debug
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: retrieve result
+  delegate_to: localhost
+  shell: |
+    cat {{ base }}
+  register: output
+  when: VERBOSE == "true"
+
+- name: show result
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stdout }}"
+  when: VERBOSE == "true"
+    
+

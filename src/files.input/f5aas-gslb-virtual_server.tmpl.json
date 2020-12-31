@@ -1,0 +1,10 @@
+     {
+        "vs_%%virtual_server_name_normalized%%": {
+          "display_name": "vs_%%virtual_server_name%%",
+          "port": %%port%%,
+          "monitor": "none",
+          "address_family": "ipv4",
+          "address": "%%publicAddress%%"
+        }
+     }
+

@@ -1,0 +1,11 @@
+           
+           [ 
+            {
+                        "server": {
+                            "use": "/Common/Shared/%%gslbServer%%"
+                        },
+                        "virtualServer": "%%virtual_server_name%%",
+                        "ratio": %%ratio%%
+            }
+           ]
+

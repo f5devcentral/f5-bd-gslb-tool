@@ -1,0 +1,29 @@
+---
+
+- name: "Set initial value for sendString and receiveString for GLSB monitor probes"
+  set_fact:
+    sendString: ""
+    receiveString: "(?s)"
+    crLf: '\\\\\\\\r\\\\\\\\n'
+    ecrLf: '\\\\\\\\\\\\\\\\r\\\\\\\\\\\\\\\\n'
+
+- name: Set sendString and receiveString for GSLB monitor probes
+  set_fact:
+    sendString: "{{ sendString + 'GET ' + (path|default('/', true)|regex_replace('(.*[^/])$', '\\1' + '/')) + ' HTTP/1.1' + crLf + 'Host: ' + item.split('.')[0] + '.' + BASE_DOMAIN + crLf + 'User-Agent: F5 Cloud Services' + crLf + crLf}}"
+    receiveString: "{{ receiveString + 'HTTP/1.. 200 OK' + crLf + '.*' }}"
+  with_items: "{{ paths }}"
+  loop_control:
+    loop_var: path
+
+- name: "Append Connection: close headers to sendString"
+  set_fact:
+    sendString: "{{ sendString | regex_replace( ecrLf + ecrLf + '$', ecrLf + 'Connection: close' + ecrLf + ecrLf) }}"
+
+- name: "Show GSLB probing strings for host {{item}}"
+  debug:
+    msg:
+    - "sendString: {{sendString}}"
+    - "receiveString: {{receiveString}}"
+  when: VERBOSE == "true"
+
+

@@ -1,0 +1,71 @@
+- name: set convinience variables
+  set_fact: 
+    single_quote: "'"
+
+#### loop over the unique hosts for tls and non tls indepdently
+
+# HTTP
+
+- name: "set projectHosts: select HTTP routes out of project routes"
+  set_fact:
+    tls_expression: "spec.tls == None"
+  when: ROUTES_TYPE == "http" or ROUTES_TYPE is not defined
+
+- name: "set projectHosts: stored in variable using route_list.resources"
+  set_fact:
+    projectHosts: "{{ route_list.resources | json_query(query) | unique}}"
+    query_filter: "[?({{tls_expression}})]"
+  vars:
+    query: "[?({{tls_expression}})].spec.host"
+  when: ROUTES_TYPE == "http" or ROUTES_TYPE is not defined
+
+- name: "show projectHosts"
+  debug:
+    msg: "projectHosts is {{projectHosts}}"
+  when: VERBOSE == "true" and (ROUTES_TYPE == "http" or ROUTES_TYPE is not defined) 
+
+- name: "Processing HTTP routes for each host"
+  include_tasks: routes.yaml
+  with_items: "{{ projectHosts }}"
+  vars:
+#    monitorType: "http_advanced"
+    protocol: "http"
+    query_expression: "{{ 'host == ' + single_quote + item + single_quote }}"
+    query: "[].spec[?({{query_expression}})].path"
+    paths: "{{ route_list.resources | json_query(query_filter) | json_query(query)}}"     
+  when: ROUTES_TYPE == "http" or ROUTES_TYPE is not defined
+
+# - meta: end_play
+
+# HTTPS hosts
+
+- name: "set projectHosts: select HTTPS routes out of project routes"
+  set_fact:
+    tls_expression: "spec.tls != None"
+  when: ROUTES_TYPE == "https" or ROUTES_TYPE is not defined
+
+- name: "set projectHosts: stored in variable using route_list.resources"
+  set_fact:
+    projectHosts: "{{ route_list.resources | json_query(query) | unique}}"
+    query_filter: "[?({{tls_expression}})]"
+  vars:
+    query: "[?({{tls_expression}})].spec.host"
+  when: VERBOSE == "true" and (ROUTES_TYPE == "https" or ROUTES_TYPE is not defined)
+
+- name: "show projectHosts"
+  debug:
+    msg: "projectHosts is {{projectHosts}}"
+  when: VERBOSE == "true" and (ROUTES_TYPE == "https" or ROUTES_TYPE is not defined)
+
+- name: "Processing HTTPS routes for each host"
+  include_tasks: routes.yaml
+  with_items: "{{ projectHosts }}"
+  vars:
+#    monitorType: "https_advanced"
+    protocol: "https"
+    query_expression: "{{ tls_expression + ' && ' + 'spec.host == ' + single_quote + item + single_quote }}"
+    query: "[?({{query_expression}})].spec.path"
+    paths: "{{ route_list.resources | json_query(query_filter) | json_query(query)}}"
+  when: ROUTES_TYPE == "https" or ROUTES_TYPE is not defined
+
+

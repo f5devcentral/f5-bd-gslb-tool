@@ -1,0 +1,32 @@
+- name: add l7router name
+  lineinfile:
+    path: files.output/backend-tool-top.cfg
+    line: "L7ROUTER[{{n_l7router}}]={{l7router}}"
+    create: yes
+
+- name: init public address regex
+  set_fact:
+    regex: "\"{{l7router}}"
+
+- name: create public address regex
+  with_items: "{{publicAddress[l7router]}}"
+  set_fact:
+    regex: "{{regex}}|{{publicAddress[l7router][inner]}}"
+  loop_control:
+    loop_var: inner
+
+- name: end public address regex
+  set_fact:
+    regex: "{{regex|replace('.','\\.')}}\""
+
+- name: Add publicAddress of l7router
+  lineinfile:
+    path: files.output/backend-tool-top.cfg
+    line: "PUBADDR[{{n_l7router}}]={{regex}}"
+
+- name: increment iterator
+  set_fact:
+    n_l7router: "{{ (n_l7router|int) +1 }}"
+
+
+

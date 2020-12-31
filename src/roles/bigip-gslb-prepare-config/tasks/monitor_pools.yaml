@@ -1,0 +1,20 @@
+---
+
+- name: "Create an monitor for each HTTP path"
+  include_tasks: monitor_pools_path.yaml 
+  with_items: "{{ item.httpPaths }}"
+  vars:
+    monitorType: "{{monitorTypes[backend]['http']}}"
+    protocol: "http"
+  loop_control:
+    loop_var: path
+
+- name: "Create a monitor for each HTTPS path"
+  include_tasks: monitor_pools_path.yaml
+  with_items: "{{ item.httpsPaths }}"
+  vars:
+    monitorType: "{{monitorTypes[backend]['https']}}"
+    protocol: "https"
+  loop_control:
+    loop_var: path
+

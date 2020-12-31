@@ -1,0 +1,17 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/credentials.yaml"
+    - "vars/setup.yaml"
+    - "vars/gslbState.uncommited.yaml"
+  module_defaults:
+    group/k8s:
+      host: "{{apiEndpoint[l7router]}}"
+      validate_certs: false
+#      ca_cert: ca.pem
+  roles: 
+    - gslb-tool-init-project-folder
+    - gslb-tool-eliminate-project 
+    - "k8s-retrieve-routes-{{resourceType[l7router]}}"
+    - "gslb-tool-add-retrieved-routes-{{resourceType[l7router]}}"
+

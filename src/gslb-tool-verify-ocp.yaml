@@ -1,0 +1,18 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/credentials.yaml"
+    - "vars/setup.yaml"
+  module_defaults:
+    group/k8s:
+      validate_certs: false
+#      ca_cert: ca.pem
+      host: "{{ apiEndpoint[item] }}"
+  tasks: 
+    - name: Loop for each l7router
+      with_items: "{{ apiEndpoint }}"
+      include_role:
+        name: gslb-tool-verify-ocp
+      vars:
+        l7router: "{{item}}"
+

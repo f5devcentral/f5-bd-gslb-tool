@@ -1,0 +1,58 @@
+---
+
+- name: "Generating file name for virtual >>> {{item.l7router}} >> {{address_item}}"
+  set_fact:
+    outfile: "files.output/backend-{{GSLB_DOMAIN}}/f5aas-gslb-virtual_server.{{ROUTES_TYPE}}.{{item.host}}.{{item.l7router}}.{{address_item}}.json"
+
+- name: "Stat file {{outfile}}"
+  stat: 
+    path: "{{outfile}}"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile
+
+- name: "Generating file for virtual >>> {{item.l7router}} >> {{address_item}}"
+  block:
+    - name: prepare virtual servers JSON objects, copy the template file
+      delegate_to: localhost
+      shell: |
+        set -e
+        cp "files.input/f5aas-gslb-virtual_server.tmpl.json" "{{outfile}}"
+
+    - name: prepare virtual servers JSON objects, parametrize the template file
+      delegate_to: localhost
+      replace:
+        path: "{{outfile}}"
+        regexp: "{{ inner.expr }}"
+        replace: "{{ inner.replace }}"
+      with_items:
+          - { expr: '%%virtual_server_name_normalized%%', replace: "{{ROUTES_TYPE}}_{{item.host.split('.')[0] | regex_replace('[-.]', '_')}}_{{item.l7router | regex_replace('[-.]', '_')}}_{{address_item}}"}
+          - { expr: '%%virtual_server_name%%', replace: "{{ROUTES_TYPE}}_{{item.host.split('.')[0]}}_{{item.l7router}}_{{address_item}}"}
+          - { expr: '%%publicAddress%%', replace: "{{item.publicAddress[address_item]}}" }
+          - { expr: '%%port%%', replace: "{{ROUTES_TYPE | regex_replace('https', '443') | regex_replace('http', '80') }}" }
+      loop_control:
+        loop_var: inner
+  when: check_outfile.stat.exists == false
+
+- name: "Stat file {{outfile}}.included"
+  stat:
+    path: "{{outfile}}.included"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile_included
+
+- name: conditionally add virtual server JSON document
+  block:
+    - name: add virtual server JSON document
+      include_tasks: library/json-add-dict-element.yaml
+      vars:
+        node: "{{outfile}}"
+        branch: ".configuration.gslb_service.virtual_servers"
+        leaf: ""
+        base: "files.output/backend-{{GSLB_DOMAIN}}/f5aas-gslb-update-subscription.tmpl.json"
+    - name: mark file as included
+      file:
+        path: "{{outfile}}.included"
+        state: touch
+  when: check_outfile_included.stat.exists == false
+

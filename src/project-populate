@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -e
+
+usage() {
+
+cat <<USAGE
+
+This command populates (copies) in the gslbState.uncommited.yaml file the previously retrieved routes of a given project/l7router (src l7router) into another l7router (dest l7router).
+
+Before populating, all the routes of the given project are deleted from dest l7router.
+
+Usage:
+
+project-populate.sh <project> <source l7router> <dest l7router>
+
+USAGE
+
+}
+
+#########################################################################################
+
+if [ $# -ne 3 ]; then
+  usage
+  exit 1
+fi
+
+#########################################################################################
+
+ansible-playbook -e "projectName=$1 srcOcpAlias=$2 dstOcpAlias=$3" project-populate.yaml
+
+
+
+
+

@@ -1,0 +1,83 @@
+#!/bin/bash
+
+set -e
+
+################################################################################################################################
+echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo ">>> gslb-tool-verify: Checking that all the requisite tools are in place"...
+echo
+
+command -v jq >/dev/null 2>&1 || ( echo >&2 ">>> gslb-tools require the jq utility but it's not installed. Aborting."; exit 1; )
+
+[ -r project-retrieve.yaml ] || ( echo >&2 ">>> gslb-tools require to be run from gslb-tool's directory. Aborting." ; exit 1; )
+
+command -v ansible >/dev/null 2>&1 || ( echo >&2 ">>> gslb-tools require ansible but it is not installed. Aborting." ; exit 1; ) 
+
+command -v ansible-doc >/dev/null 2>&1 || ( echo >&2 ">>> gslb-tools require the ansible-doc utility but it is not installed. Aborting." ; exit 1; ) 
+
+###
+
+modules='k8s_auth|k8s_info|shell|uri'
+
+declare -i available
+
+available=$(ansible-doc -l | egrep "^($modules)[[:space:]]" | wc -l)
+
+if [ $available -lt 4 ]; then
+
+	echo >&2 ">>> gslb-tools require the ansible modules ($modules) and some are missing (found $available modules). Aborting."	
+	exit 1
+fi
+
+echo
+echo ">>> gslb-tool-verify: All the required utilities and modules are ready."
+echo
+
+################################################################################################################################
+
+echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo ">>> gslb-tool-verify: Checking reachability and login credentials to F5 Cloud Services..."
+echo
+
+ansible-playbook gslb-tool-verify-cloudservices.yaml
+
+echo 
+echo ">>> gslb-tool-verify: F5 Cloud Services check succesfull."
+echo
+
+################################################################################################################################
+
+echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo ">>> gslb-tool-verify: Checking reachability and login credentials to the different Kubernetes/Openshift clusters"
+
+ansible-playbook -e "projectName=default" gslb-tool-verify-ocp.yaml
+
+echo 
+echo ">>> gslb-tool-verify: OCP/K8s login successful to all clusters"
+echo
+
+################################################################################################################################
+
+echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo ">>> gslb-tool-verify: Checking reachability of the public addresses"
+echo
+
+ansible-playbook gslb-tool-verify-publicAddress.yaml
+
+echo
+echo ">>> gslb-tool-verify: Confirmed that there is an HTTP/HTTPS listener in all public addresses defined"
+echo
+
+################################################################################################################################
+
+echo
+echo
+echo
+echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo ">>> gslb-tool-verify: All checks have succeeded. The tool is ready to be used."
+echo ">>> gslb-tool-verify: Please use the gslb-tool-setup-update command to store&log the changes"
+echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo
+echo
+echo
+

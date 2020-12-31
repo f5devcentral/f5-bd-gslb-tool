@@ -1,0 +1,44 @@
+
+- name: "Log in OCP/K8s (obtain access token) in l7router {{l7router}}"
+  k8s_auth:
+    username: "{{ k8s_user[l7router] }}"
+    password: "{{ k8s_pass[l7router] }}"
+  register: k8s_auth_results
+  when: k8s_user[l7router] is defined
+
+- name: set api key
+  set_fact:
+    api_key: "{{ k8s_auth_results.k8s_auth.api_key }}"
+  when: k8s_user[l7router] is defined
+
+- name: "Get list of l7 routes (Route resource)"
+  k8s_info:
+    api_key: "{{ api_key | default}}"
+    context: "{{ k8s_context[l7router] | default()}}"
+    kind: Route
+    namespace: "{{projectName}}"
+#    namespace: "{{l7router}}-{{projectName}}"
+  register: route_list
+
+- name: If OCP/K8s login succeeded, try to log out (revoke access token)
+  k8s_auth:
+    state: absent
+    api_key: "{{ api_key }}"
+  when: api_key is defined
+
+- name: Show all
+  debug:
+    msg: "{{ route_list.resources }}"
+#     msg: "{{ route_list }}"
+  when: VERBOSE == "true"
+
+# For the time being we only support HTTP or HTTPS routes, and these only using standard ports.
+- name: Show result
+  debug:
+    msg: '{{ resource.spec.tls.termination | default("http") | regex_replace("^(passthrough|edge|reencrypt)$", "https") }} {{ resource.spec.host }} {{ (resource.spec.path|default("/")) }}'
+  when: VERBOSE == "true"
+  with_items: "{{ route_list.resources }}"
+  loop_control:
+    loop_var: resource
+
+

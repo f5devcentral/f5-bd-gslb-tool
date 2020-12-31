@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e
+
+usage() {
+
+cat <<USAGE
+
+This command retrieves all the routes of the given project/namespace and the specified l7router storing this information in the gslbState.uncommited.yaml file. 
+
+Before retrieving the routes, any previously existing route for that project/namespace in that l7router stored in the gslbState.uncommited.yaml file.
+
+By default the retrieved routes will get a GSLB ratio of 100. This can be changed with the project-ratio command afterwards.
+
+Usage:
+
+project-retrieve <project> <l7router>
+
+USAGE
+
+}
+
+#########################################################################################
+
+if [ $# -ne 2 ]; then
+  usage
+  exit 1
+fi
+
+#########################################################################################
+
+ansible-playbook -e "projectName=$1 l7router=$2" project-retrieve.yaml
+
+
+
+
+

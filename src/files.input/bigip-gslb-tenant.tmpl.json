@@ -1,0 +1,8 @@
+  { 
+    "%%tenantNormalized%%": {
+        "class": "Tenant",
+        "Application": {
+            "class": "Application"
+        }
+    }
+  }

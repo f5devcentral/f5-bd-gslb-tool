@@ -1,0 +1,10 @@
+---
+
+- name: add server monitors JSON document
+  include_tasks: library/json-add-dict-element.yaml
+  vars:
+    node: "files.input/bigip-gslb-server-monitors.tmpl.json"
+    branch: ".Common.Shared"
+    leaf: ""
+    base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json"
+

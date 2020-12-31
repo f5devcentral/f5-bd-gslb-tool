@@ -1,0 +1,14 @@
+{
+  "account_id": "{{ACCOUNT_ID}}",
+  "catalog_id": "c-aaQnOrPjGu",
+  "plan_id": "p-__free_dns",
+  "service_type": "gslb",
+  "service_instance_name": "{{SERVICE_INSTANCE_NAME}}",
+  "configuration": {
+    "gslb_service": {
+      "zone": "{{GSLB_DOMAIN}}"
+        }
+      }
+    }
+  }
+}

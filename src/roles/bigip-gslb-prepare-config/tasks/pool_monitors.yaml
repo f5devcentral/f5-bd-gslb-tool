@@ -1,0 +1,27 @@
+---
+
+- name: set Normalized variables
+  set_fact:
+    hostNormalized: "{{ item.host.split('.')[0] | regex_replace('[-.]', '_') }}"
+    pathNormalized: "{{ path | regex_replace('/', '_')}}"
+    poolGslbRecordNormalized: "pool_{{ item.host | regex_replace('[-.]', '_') }}"
+
+- name: set monitor name
+  set_fact:
+    monitor: "{{ 'monitor_' + protocol + '_' + hostNormalized + '_' + pathNormalized }}"
+
+- name: set monitor JSON
+  set_fact:
+    monitor_json: '{ "use": "/Common/Shared/{{monitor}}" }'
+
+- name: "Save monitor JSON" 
+  copy: content="{{monitor_json}}" dest="files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-pool_{{item.host}}_monitor.json"
+
+- name: "Add monitors element into the pool JSON document"
+  include_tasks: library/json-add-array-element.yaml
+  vars:
+    node: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-pool_{{item.host}}_monitor.json"
+    branch: ".{{poolGslbRecordNormalized}}.monitors"
+    base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-pool_{{item.host}}.json"
+
+

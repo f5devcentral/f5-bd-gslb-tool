@@ -1,0 +1,5 @@
+{
+    "username": "{{GSLB_USER}}",
+    "password": "{{GSLB_PASS}}"
+}
+

@@ -1,0 +1,25 @@
+
+- name: "Checking that we can connect to l7router {{inner}}"
+  debug:
+    msg: "Public addresses defined: {{publicAddress[inner]}}"
+
+- name: "Check if we can connect with HTTP"
+  uri:
+    url: "http://{{inner3}}"
+    status_code: "{{setup_valid_codes}}"
+  with_items: "{{ publicAddress[inner][inner2] }}"
+  loop_control:
+    loop_var: inner3
+  when: ROUTES_TYPE == "http"
+
+- name: "Check if we can connect with HTTPS"
+  uri:
+    url: "https://{{inner3}}"
+    status_code: "{{setup_valid_codes}}"
+    validate_certs: "no"
+  with_items: "{{ publicAddress[inner][inner2] }}"
+  loop_control:
+    loop_var: inner3
+  when: ROUTES_TYPE == "https"
+
+

@@ -1,0 +1,26 @@
+---
+
+- name: Parse the template file
+  template:
+    src: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json" 
+    dest: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.json"
+
+- name: Publish BIG-IP AS3 Declaration using ATC
+  include_role:
+    name: f5atc
+  vars:
+    atc_method: POST
+    atc_declaration_file: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.json"
+    atc_delay: 10
+    atc_retries: 5
+    atc_service: AS3
+    provider:
+      server: "{{BIGIP_HOST}}"
+      server_port: "{{BIGIP_PORT}}"
+      user: "{{GSLB_USER}}"
+      password: "{{GSLB_PASS}}"
+      validate_certs: "false"
+
+- name: show AS3 status
+  debug: var=atc_AS3_status
+

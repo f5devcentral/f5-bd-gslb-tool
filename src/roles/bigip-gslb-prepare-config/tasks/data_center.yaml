@@ -1,0 +1,23 @@
+---
+
+- name: prepare Data Center JSON object, copy the template file for l7router {{item.l7router}}
+  delegate_to: localhost
+  shell: |
+    set -e
+    cp "files.input/bigip-gslb-data_center.tmpl.json" "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-data_center.{{item.l7router}}.json"
+
+- name: prepare Data Center JSON object, parametrize the template file
+  delegate_to: localhost
+  replace:
+    path: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-data_center.{{item.l7router}}.json"
+    regexp: "%%dataCenter%%"
+    replace: "{{ item.l7router }}"
+
+- name: add Data Center to JSON document
+  include_tasks: library/json-add-dict-element.yaml
+  vars:
+    node: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-data_center.{{item.l7router}}.json"
+    branch: ".Common.Shared"
+    leaf: ""
+    base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json"
+

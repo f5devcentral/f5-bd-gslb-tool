@@ -1,0 +1,10 @@
+{
+    "l7router": "%%l7router%%",
+    "host": "%%host%%",
+    "project": "%%project%%",
+    "publicAddress": %%publicAddress%%,
+    "ttl": "%%ttl%%",
+    "ratio": "%%ratio%%",
+    "httpPaths": [],
+    "httpsPaths": []
+}

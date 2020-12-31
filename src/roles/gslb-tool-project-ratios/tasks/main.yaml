@@ -1,0 +1,93 @@
+- name: set convinience variables
+  set_fact: 
+    single_quote: "'"
+
+#- name: "Show projectName"
+#  debug:
+#    msg: "projectName is: {{projectName}}"
+#  when: VERBOSE == "true"
+#
+#- name: "Show requested ratios"
+#  with_dict: "{{ ratios }}"
+#  debug:
+#    msg: "l7router: {{item.key}}, ratio: {{item.value}}"
+#  when: VERBOSE == "true"
+
+- name: "Set variable with the number of l7router/ratios requested"
+  set_fact: 
+    requested_n: "{{ ratios | length }}"
+
+- name: "Set query expression for retrieving l7router elements in current uncommited state"
+  set_fact:
+    query_expression: "[?( {{ 'project == ' + single_quote + projectName + single_quote }})]"
+
+- name: "Show query expression"
+  debug:
+    msg: "query_expression is {{query_expression}}"
+
+- name: "Retrieve matching elements from current uncommited gslbState"
+  set_fact:
+    gslbElements: "{{ gslbState | json_query(query_expression) }}"
+
+- name: "Show gslbState"
+  debug:
+   msg: "{{gslbState}}"
+  when: VERBOSE == "true"
+
+- name: "Show matching elements"
+  debug:
+    msg: "{{gslbElements}}"
+  when: VERBOSE == "true"
+
+- name: "Set variable with the number of matching elements from current uncommited gslbState"
+  set_fact:
+    current_n: "{{gslbElements | json_query('[].l7router') | unique | length}}"
+
+- name: "Check if number of l7router/ratios elements differs from elements in current uncommited gslbState"
+  fail:
+   msg: "The number of elements in request ({{requested_n}}) must match the number of elements in current uncommited gslbState for ({{current_n}}) the given project ({{projectName}})"
+  when: requested_n != current_n
+
+- name: "Create temporary gslbState in JSON format"
+  copy: content="{{ gslbState | to_nice_json(8) }}" dest=files.output/gslbState.requested.json
+
+- name: "Name gslbState the array in files.output/gslbState.requested.json"
+  shell: |
+    set -e
+    set -x
+    cp files.output/gslbState.requested.json files.output/gslbState.requested.json.tmp
+    jq -s ' flatten | { gslbState: . }' files.output/gslbState.requested.json.tmp > files.output/gslbState.requested.json
+
+  register: output
+
+- name: show debug
+  debug:
+    msg:
+      - "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: "Read the generated file files.output/gslbState.requested.json"
+  shell: cat files.output/gslbState.requested.json
+  register: gslbStateRequestedJson
+
+- name: show debug
+  debug:
+    msg:
+      - "{{ gslbStateRequestedJson.stdout }}"
+  when: VERBOSE == "true"
+
+- name: "Set ratios for each l7router for project {{project}}"
+  include_tasks: project_ratio.yaml
+  with_dict: "{{ ratios }}"
+
+- name: "Read the generated file files.output/gslbState.requested.json"
+  shell: cat files.output/gslbState.requested.json
+  register: gslbStateRequestedJson
+
+- name: "Create new gslbState variable with elements in it"
+  set_fact:
+    gslbStateRequested: "{{ gslbStateRequestedJson.stdout | from_json }}"
+
+- name: "Save the requested gslbState in vars/gslbState.uncommited.yaml"
+  copy: content="{{ gslbStateRequested | to_nice_yaml(indent=2, width=10000) }}" dest=vars/gslbState.uncommited.yaml
+

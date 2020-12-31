@@ -1,0 +1,30 @@
+- name: set convinience variables
+  set_fact: 
+    single_quote: "'"
+
+- name: "projectHosts: retrieved from route_list.resources"
+  set_fact:
+    projectHosts: "{{ route_list.resources | json_query(query) | unique}}"
+  vars:
+    query: "[].spec.rules[].host"
+
+- name: "show projectHosts variable"
+  debug:
+    msg: "projectHosts is {{projectHosts}}"
+  when: VERBOSE == "true"
+
+- name: "Processing L7 routes for each host"
+  include_tasks: host.yaml
+  with_items: "{{ projectHosts }}"
+  vars:
+    filter_nontls: "(spec.tls == None)"
+    filter_tls: "(spec.tls != None)"
+    query_nontls: "[?{{filter_nontls}}]"
+    query_tls: "[?{{filter_tls}}]"
+    filter_host: "({{ 'host == ' + single_quote + item + single_quote }})"
+    query_host: "[].spec.rules[?{{filter_host}}]"
+    query_httpPaths: "[].spec.rules[?{{filter_host}}].http.paths[][][].path"
+    query_httpsPaths: "[].spec.rules[?{{filter_host}}].http.paths[][][].path"
+    httpPaths: "{{ route_list.resources | json_query(query_nontls) | json_query(query_httpPaths)}}"
+    httpsPaths: "{{ route_list.resources | json_query(query_tls) | json_query(query_httpsPaths)}}"
+

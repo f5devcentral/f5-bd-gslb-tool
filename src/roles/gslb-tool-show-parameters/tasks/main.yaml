@@ -1,0 +1,12 @@
+---
+
+- name: "show parameters for GSLB ansible playbooks"
+  debug: 
+    msg: 
+      - "HOST is {{host}}" 
+      - "GSLB_DOMAIN is {{GSLB_DOMAIN}}"
+      - "GSLB_RATIO_ONPREM is {{gslb_ratio['onprem']}}"
+      - "GSLB_RATIO_AWS is {{gslb_ratio['aws']}}"
+
+
+

@@ -1,0 +1,23 @@
+
+- name: "calculate #publicAddress"
+  set_fact:
+    n_publicAddress: "{{publicAddress[item.key] | length}}"
+
+- name: "calculate average ratio for #publicAddress"
+  set_fact:
+    average_populate_ratio: "{{((item.value|int)/(n_publicAddress|int))|round|int}}"
+
+#- name: "show value"
+#  debug:
+#    msg: "average_populate_ratio for project {{projectName}} in {{item.key}} is {{average_populate_ratio}} because it has {{n_publicAddress}} addresses and ratio is {{item.value}}"
+
+- name:
+  shell: |
+    set -e
+    set -x
+    cat files.output/gslbState.requested.json | jq '.gslbState[] | if .project == "{{projectName}}" and .l7router == "{{item.key}}" then .ratio = "{{average_populate_ratio}}" else . end' | jq -s '{ gslbState: . }' > files.output/gslbState.requested.json.tmp
+    cp files.output/gslbState.requested.json.tmp files.output/gslbState.requested.json
+
+  register: output
+
+

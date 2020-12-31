@@ -1,0 +1,15 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "vars/credentials.yaml"
+    - "vars/setup.yaml"
+    - "vars/gslbState.uncommited.yaml"
+  roles: 
+    # Note: we are not using conditional roles because that construct requires the role to exist anyway. Instead we just create empty roles.
+    - role: "{{backend}}-gslb-prepare-config"
+    - role: "{{backend}}-gslb-login"
+    - role: "{{backend}}-gslb-get-account-details"
+    - role: "{{backend}}-gslb-publish"
+    - role: "{{backend}}-gslb-logout"
+
+

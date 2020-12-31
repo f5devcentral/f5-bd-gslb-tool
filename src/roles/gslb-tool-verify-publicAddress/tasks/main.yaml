@@ -1,0 +1,8 @@
+
+
+- name: Check publicAddress values in setup.yaml
+  include_tasks: publicAddress_l7router.yaml
+  with_items: "{{ publicAddress }}"
+  loop_control: 
+    loop_var: inner
+

@@ -1,0 +1,61 @@
+---
+
+- name: retrieve list of existing GSLB subscriptions
+  delegate_to: localhost
+  uri:
+    url: "https://{{F5AAS_HOST}}/{{API_VERSION}}/svc-subscription/subscriptions?status=_allStatusFilter&account_id={{ACCOUNT_ID}}&service_type=gslb"
+    method: GET
+    return_content: yes
+    status_code: 200
+    headers:
+      Accept: application/json
+      Authorization: "Bearer {{ACCESS_TOKEN}}"
+      Host: api.cloudservices.f5.com
+  register: f5aas_list_subscriptions
+
+- name: filter list of GSLB subscriptions based on zone name
+  set_fact:
+    subscription_id: "{{ f5aas_list_subscriptions.json | json_query(query) | first | default('') }}"
+  vars:
+    query: "subscriptions[?configuration.gslb_service.zone=='{{GSLB_DOMAIN}}'].subscription_id"
+
+- name: "check that there is a service for zone {{GSLB_DOMAIN}}" 
+  fail: 
+   msg: "Didn't find the subscription_id for zone {{GSLB_DOMAIN}}" 
+  when: subscription_id == ""
+
+- name: "retrieve the state of the zone {{GSLB_DOMAIN}}"
+  delegate_to: localhost
+  uri:
+    url: https://{{F5AAS_HOST}}/{{API_VERSION}}/svc-subscription/subscriptions/{{subscription_id}}
+    method: GET
+    return_content: yes
+    status_code: 200
+    headers:
+      Accept: application/json
+      Authorization: "Bearer {{ACCESS_TOKEN}}"
+  register: f5aas_subscription_details
+
+#- name: "show the state of the subscription_id {{subscription_id}} for zone {{GSLB_DOMAIN}}"
+#  debug:
+#    msg: "{{ f5aas_subscription_details }}"
+
+- name: set query
+  set_fact:
+    query: "json[?configuration.details.pools_health]"
+
+
+- name: "banner: GSLB Health Status"
+  include_role:
+    name: banner_item
+  vars:
+    title: "GSLB Health Status"
+    item: ""
+
+- name: "show pools's health"
+  include_tasks: show_pool_health.yaml
+  vars:
+    pool: "{{item}}"
+  with_items: "{{ f5aas_subscription_details.json.configuration.details.pools_health }}"
+
+ 

@@ -1,0 +1,83 @@
+
+
+- name: "Create temporary gslbState in JSON format"
+  copy: content="{{ gslbState | to_nice_json(8) }}" dest=files.output/gslbState.requested.json
+
+- name: "Name gslbState the array in files.output/gslbState.requested.json"
+  shell: |
+    set -e
+    set -x
+    cp files.output/gslbState.requested.json files.output/gslbState.requested.json.tmp
+    jq -s ' flatten | { gslbState: . }' files.output/gslbState.requested.json.tmp > files.output/gslbState.requested.json
+ 
+  register: output
+
+- name: show debug
+  debug:
+    msg:
+      - "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: "Read the generated file files.output/gslbState.requested.json"
+  shell: cat files.output/gslbState.requested.json
+  register: gslbStateRequestedJson
+
+- name: show debug
+  debug:
+    msg:
+      - "{{ gslbStateRequestedJson.stdout }}"
+  when: VERBOSE == "true"
+
+- name: "Eliminate project {{projectName}} in l7router {{l7router}}"
+  shell: |
+    set -e
+    set -x
+
+    if [ ! -s files.output/gslbState.requested.json ]; then
+        echo '{ "gslbState": [ null ] }' > files.output/gslbState.requested.json
+        echo "false"
+        exit 0
+    fi
+
+    cat files.output/gslbState.requested.json | jq '.gslbState[] | select((.l7router == "{{l7router}}" and .project == "{{projectName}}") | not)' | jq -s '{ gslbState: . }' > files.output/gslbState.requested.json.tmp
+
+    if [ ! -s files.output/gslbState.requested.json.tmp ]; then
+        echo '{ "gslbState": [ null ] }' > files.output/gslbState.requested.json
+    else
+        cp files.output/gslbState.requested.json.tmp files.output/gslbState.requested.json
+    fi
+
+    echo "false"
+
+  register: isempty
+
+
+
+- name: show debug
+  debug:
+    msg: 
+      - "{{ isempty.stdout_lines }}"
+      - "{{ isempty.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: "Read the generated file files.output/gslbState.requested.json"
+  shell: cat files.output/gslbState.requested.json
+  register: gslbStateRequestedJson
+
+- name: "Create new gslbState variable with elements in it"
+  set_fact:
+    gslbStateRequested: "{{ gslbStateRequestedJson.stdout | from_json }}"
+
+- name: show debug
+  debug:
+    msg: "is empty? {{ isempty }}"
+  when: VERBOSE == "true"
+
+- name: "Save the requested gslbState in vars/gslbState.uncommited.yaml with elements in it"
+  copy: content="{{ gslbStateRequested | to_nice_yaml(indent=2, width=10000) }}" dest=vars/gslbState.uncommited.yaml
+  when: isempty.stdout == "false" 
+
+- name: "Save the requested gslbState in vars/gslbState.uncommited.yaml without elements in it"
+  copy: content="gslbState:\n" dest=vars/gslbState.uncommited.yaml
+  when: isempty.stdout == "true"
+

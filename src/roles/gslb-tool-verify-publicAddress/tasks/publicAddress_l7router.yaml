@@ -1,0 +1,7 @@
+
+- name: "HTTP/HTTPS connectivity checks begin for {{inner}} with public addresses {{ publicAddress[inner] }}"
+  include_tasks: publicAddress_l7router_addresses.yaml
+  with_items: "{{ publicAddress[inner] }}"
+  loop_control:
+    loop_var: inner2
+

@@ -1,0 +1,62 @@
+---
+
+- name: "initialize folder for GSLB_DOMAIN {{GSLB_DOMAIN}}"
+  delegate_to: localhost
+  shell: |
+    mkdir -p files.output/backend-{{GSLB_DOMAIN}}
+    rm -f files.output/backend-{{GSLB_DOMAIN}}/*.included
+    cp files.input/f5aas-gslb-update-subscription.tmpl.json files.output/backend-{{GSLB_DOMAIN}}
+
+- name: set convinience variables
+  set_fact: 
+    single_quote: "'"
+
+- name: build query expression for gslb variable
+  set_fact:
+    query_expression: "*"
+
+### virtual servers
+ 
+- name: add virtual server JSON objects
+  include_tasks: virtual_server_l7router_loop.yaml
+  with_items: '{{ gslbState | json_query(query) }}'
+  vars:
+    # regex_replace is not being allowed to be used: 'JMESPathError in json_query filter plugin:\nUnknown function: regex_replace'
+    query: "[?({{query_expression}})].{ l7router: l7router, host: host, publicAddress: publicAddress }"
+
+### pools
+
+- name: add pool JSON objects
+  include_tasks: pool.yaml
+  with_items: '{{ gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ host: host }"
+
+### load balanced records
+
+- name: add load balanced record JSON objects
+  include_tasks: load_balanced_record.yaml
+  with_items: '{{ gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ host: host }"
+
+### monitors
+
+- name: add HTTP monitor JSON objects 
+  include_tasks: monitor_host.yaml
+  with_items: '{{ gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ host: host }"
+    monitorType: "{{monitorTypes[backend][ROUTES_TYPE]}}"
+    pathsType: "httpPaths"
+  when: ROUTES_TYPE == "http"
+
+- name: add HTTPS monitor JSON objects
+  include_tasks: monitor_host.yaml
+  with_items: '{{ gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ host: host }"
+    monitorType: "{{monitorTypes[backend][ROUTES_TYPE]}}"
+    pathsType: "httpsPaths"
+  when: ROUTES_TYPE == "https"
+

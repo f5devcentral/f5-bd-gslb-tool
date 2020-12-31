@@ -1,0 +1,123 @@
+
+- name: "Processing routes for Host {{item}}" 
+  debug:
+    msg: 
+      - "{{httpPaths}}"
+      - "{{httpsPaths}}"
+  when: VERBOSE == "true"
+
+- name: "initialize folder for host {{item}}"
+  delegate_to: localhost
+  shell: |
+    rm -f files.output/states-{{GSLB_DOMAIN}}/*
+    [ -d files.output/states-{{GSLB_DOMAIN}} ] && rmdir files.output/states-{{GSLB_DOMAIN}}
+    mkdir -p files.output/states-{{GSLB_DOMAIN}}
+
+### template processing
+
+- name: "Prepare the gslbState, copy the template file"
+  delegate_to: localhost
+  shell: |
+    set -e
+    cp "files.input/f5aas-gslb-state.tmpl.json" "files.output/states-{{GSLB_DOMAIN}}/{{item}}.json"
+
+- name: show publicAddress
+  debug:
+    msg: "publicAddress is {{publicAddress[l7router] | to_json}}"
+  when: VERBOSE == "true"
+
+- name: "calculate #publicAddress"
+  set_fact:
+    n_publicAddress: "{{publicAddress[l7router] | length}}"
+
+- name: "Prepare the gslbState, parametrize the template file"
+  delegate_to: localhost
+  replace:
+    path: "files.output/states-{{GSLB_DOMAIN}}/{{item}}.json"
+    regexp: "{{ inner.expr }}"
+    replace: "{{ inner.replace }}"
+  with_items:
+      - { expr: '%%l7router%%', replace: "{{l7router}}" }
+      - { expr: '%%host%%', replace: "{{item}}" }
+      - { expr: '%%project%%', replace: "{{projectName}}" }
+      - { expr: '%%ratio%%', replace: "{{((PROJECT_RETRIEVE_RATIO|int)/(n_publicAddress|int))|round|int}}" }
+      - { expr: '%%ttl%%', replace: "{{PROJECT_DEFAULT_TTL}}" }
+  loop_control:
+    loop_var: inner
+
+- name: "Prepare the gslbState, parametrize the template file with publicAddress"
+  delegate_to: localhost
+  replace:
+    path: "files.output/states-{{GSLB_DOMAIN}}/{{item}}.json"
+    regexp: "%%publicAddress%%"
+    replace: "{{publicAddress[l7router] | to_json}}"
+
+- name: "Add httpPaths element into the state JSON document"
+  include_tasks: library/json-add-array-argv-element.yaml
+  vars:
+    node: "{{path}}"
+    branch: ".httpPaths"
+    base: "files.output/states-{{GSLB_DOMAIN}}/{{item}}.json"
+  loop_control:
+    loop_var: path
+  with_items: "{{httpPaths}}"
+
+- name: "Add httpsPaths element into the state JSON document"
+  include_tasks: library/json-add-array-argv-element.yaml
+  vars:
+    node: "{{path}}"
+    branch: ".httpsPaths"
+    base: "files.output/states-{{GSLB_DOMAIN}}/{{item}}.json"
+  loop_control:
+    loop_var: path
+  with_items: "{{httpsPaths}}"
+
+### Add gslbState element into vars/gslbState.request.yaml
+
+- name: include vars/gslbState.uncommited.yaml again
+  include_vars:
+    file: ../../vars/gslbState.uncommited.yaml
+
+- name: "Create temporary gslbState file in JSON format"
+  copy: content="{{ gslbState | to_nice_json(8) }}" dest=files.output/gslbState.requested.json
+
+- name: "Name gslbState the array in files.output/gslbState.requested.json"
+  shell: |
+    set -e
+    set -x
+    cp files.output/gslbState.requested.json files.output/gslbState.requested.json.tmp
+    jq -s ' flatten | { gslbState: . }' files.output/gslbState.requested.json.tmp > files.output/gslbState.requested.json
+
+  register: output
+
+- name: show debug
+  debug:
+    msg:
+      - "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: "Add gslbState element into to JSON document"
+  include_tasks: library/json-add-array-element.yaml
+  vars:
+    node: "files.output/states-{{GSLB_DOMAIN}}/{{item}}.json"
+    branch: ".gslbState"
+    base: "files.output/gslbState.requested.json"
+
+- name: "Read the generated file files.output/gslbState.requested.json"
+  shell: cat files.output/gslbState.requested.json
+  register: gslbStateRequestedJson
+
+- name: "Create new gslbState variable with elements in it"
+  set_fact:
+    gslbStateRequested: "{{ gslbStateRequestedJson.stdout | from_json }}"
+  when: gslbStateRequestedJson.stdout != ''
+
+- name: "Save the requested gslbState in vars/gslbState.uncommited.yaml (with elements in it)"
+  copy: content="{{ gslbStateRequested | to_nice_yaml(indent=2, width=10000) }}" dest=vars/gslbState.uncommited.yaml
+  when: gslbStateRequestedJson.stdout != ''
+
+- name: "Save the requested gslbState in vars/gslbState.uncommited.yaml (no elements in it)"
+  copy: content="gslbState:\n" dest=vars/gslbState.uncommited.yaml
+  when: gslbStateRequestedJson.stdout == ''
+
+

@@ -1,0 +1,6 @@
+            {
+                "%%dataCenter%%": {
+                    "class": "GSLB_Data_Center"
+                }
+            }
+

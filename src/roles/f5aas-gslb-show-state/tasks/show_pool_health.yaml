@@ -1,0 +1,18 @@
+---
+
+- name: "set health query for GSLB pool {{pool}}"
+  set_fact:
+    query: "json.configuration.details.pools_health.{{pool}}.members_health[]"
+
+- name: "GSLB pool's health: {{ pool }}"
+  include_tasks: banner_gslb_health.yaml
+  vars:
+    ir_pool: "{{ pool }}"
+    ir_virtual_server: "{{ inner.virtual_server }}"
+    ir_health: "{{ inner.health }}"
+    ir_details: "{{ inner.details }}"
+  with_items: "{{ f5aas_subscription_details | json_query(query) }}"
+  loop_control:
+    loop_var: inner
+
+

@@ -1,0 +1,100 @@
+#- name: include vars/gslbState.uncommited.yaml again
+#  include_vars:
+#    file: ../../vars/gslbState.uncommited.yaml
+
+#- name: "show vars"
+#  debug:
+#    msg: "{{gslbState}}"
+#
+# - meta: end_play
+
+- name: "Set convinience facts"
+  set_fact:
+    single_quote: "'"
+
+- name: "Set query expression"
+  set_fact:
+    query_expression: "[?( {{ 'project == ' + single_quote + projectName + single_quote + ' && l7router == ' + single_quote + srcOcpAlias + single_quote }})]"
+
+- name: "Show query expression"
+  debug:
+    msg: "query_expression is {{query_expression}}"
+  when: VERBOSE == "true"
+
+- name: "Retrieve matching elements from gslbState array"
+  set_fact:
+    gslbElements: "{{ gslbState |  json_query(query_expression) }}"
+
+- name: "Show retrieved gslbElements"
+  debug:
+    msg: "{{gslbElements}}"
+  when: VERBOSE == "true"
+
+- name: "calculate #publicAddress"
+  set_fact:
+    n_publicAddress: "{{publicAddress[dstOcpAlias] | length}}"
+
+- name: "calculate average ratio for #publicAddress"
+  set_fact:
+    average_populate_ratio: "{{((PROJECT_POPULATE_RATIO|int)/(n_publicAddress|int))|round|int}}"
+
+- name: "Initialize folder files.output/states-{{GSLB_DOMAIN}}"
+  delegate_to: localhost
+  shell: |
+    rm -f files.output/states-{{GSLB_DOMAIN}}/*
+    [ -d files.output/states-{{GSLB_DOMAIN}}] && rmdir files.output/states-{{GSLB_DOMAIN}}
+    mkdir -p files.output/states-{{GSLB_DOMAIN}}
+
+- name: "Save project {{projectName}} gslbElements of {{srcOcpAlias}} as JSON"
+  copy: content="{{ gslbElements | to_nice_json(8) }}" dest="files.output/states-{{GSLB_DOMAIN}}/{{projectName}}.{{srcOcpAlias}}"
+
+- name: "Populate retrieved project {{projectName}} gslbElements of {{srcOcpAlias}} to {{dstOcpAlias}}"
+  shell: |
+    set -e
+    set -x
+
+    jq '.[].l7router |= sub(".*"; "{{dstOcpAlias}}") | .[].publicAddress = {{publicAddress[dstOcpAlias] | to_json}} | .[].ratio |=sub(".*" ; "{{average_populate_ratio}}")' < files.output/states-{{GSLB_DOMAIN}}/{{projectName}}.{{srcOcpAlias}} > files.output/backend-{{GSLB_DOMAIN}}/{{projectName}}.{{dstOcpAlias}}
+
+  register: output
+
+- name: show debug
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: "Save full gslbState as JSON"
+  copy: content="{{ gslbState | to_nice_json(8) }}" dest="files.output/states-{{GSLB_DOMAIN}}/all.gslbState.json"
+
+- name: "Combine populated states from project {{projectName}} in {{dstOcpAlias}} with full gslbState"
+  shell: |
+    set -e
+    set -x
+
+    jq --argjson node "$(< files.output/states-{{GSLB_DOMAIN}}/{{projectName}}.{{dstOcpAlias}} )" '. += $node ' files.output/states-{{GSLB_DOMAIN}}/all.gslbState.json | jq -s 'flatten | { gslbState: . } ' > files.output/gslbState.requested.json.tmp
+    cp files.output/gslbState.requested.json.tmp files.output/gslbState.requested.json
+
+  register: output
+
+- name: show debug
+  delegate_to: localhost
+  debug:
+    msg: "{{ output.stderr_lines }}"
+  when: VERBOSE == "true"
+
+- name: "Read the generated file files.output/gslbState.requested.json"
+  shell: cat files.output/gslbState.requested.json
+  register: gslbStateRequestedJson
+
+- name: "Create new gslbState variable"
+  set_fact:
+    gslbStateRequested: "{{ gslbStateRequestedJson.stdout | from_json }}"
+
+- name: show debug
+  debug:
+    msg: "is empty? {{ isempty }}"
+  when: VERBOSE == "true"
+
+- name: "Save the requested gslbState in vars/gslbState.uncommited.yaml"
+  copy: content="{{ gslbStateRequested | to_nice_yaml(indent=2, width=10000) }}" dest=vars/gslbState.uncommited.yaml
+

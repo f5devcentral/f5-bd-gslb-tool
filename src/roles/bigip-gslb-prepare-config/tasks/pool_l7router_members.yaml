@@ -1,0 +1,58 @@
+---
+
+- name: "Generating file name for pool member >>> {{inner.host}} >> {{inner.l7router}} > {{address_item}}"
+  set_fact:
+    outfile: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-pool_member.{{inner.host}}.{{inner.l7router}}.{{address_item}}.json"
+
+- name: "Stat file {{outfile}}"
+  stat: 
+    path: "{{outfile}}"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile
+
+- name: "Generating file for virtual >>> {{item.l7router}} >> {{address_item}}"
+  block:
+    - name: prepare pool member JSON object, copy the template file
+      delegate_to: localhost
+      shell: |
+        set -e
+        cp "files.input/bigip-gslb-pool_member.tmpl.json" "{{outfile}}"
+
+    - name: prepare the pool member JSON object, parametrize the template file
+      delegate_to: localhost
+      replace:
+        path: "{{outfile}}"
+        regexp: "{{ inner2.expr }}"
+        replace: "{{ inner2.replace }}"
+      with_items:
+          - { expr: '%%gslbServer%%', replace: "{{inner.l7router}}_{{address_item}}" }
+          - { expr: '%%virtual_server_name%%', replace: "{{inner.host.split('.')[0]}}_{{inner.l7router | regex_replace('[-.]', '_')}}_{{address_item}}"}
+          - { expr: '%%ratio%%', replace: "{{inner.ratio}}" }
+      loop_control:
+        loop_var: inner2
+  when: check_outfile.stat.exists == false
+
+- name: "Stat file {{outfile}}.included"
+  stat:
+    path: "{{outfile}}.included"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile_included
+
+- name: conditionally add pool member JSON document
+  block:
+    - name: add pool member to JSON document
+      include_tasks: library/json-add-dict-element.yaml
+      vars:
+        node: "{{outfile}}"
+        branch: ".{{ GSLB_DOMAIN | regex_replace('[-.]', '_') }}.Application.pool_{{ item.host | regex_replace('[-.]', '_') }}.members"
+        leaf: ""
+        base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json"
+
+    - name: mark file as included
+      file:
+        path: "{{outfile}}.included"
+        state: touch
+  when: check_outfile_included.stat.exists == false
+

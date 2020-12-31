@@ -1,0 +1,104 @@
+---
+
+- name: "Generating file name for pool >>> {{item.host}}"
+  set_fact:
+    outfile: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-pool_{{item.host}}.json"
+
+- name: "Stat file {{outfile}}"
+  stat: 
+    path: "{{outfile}}"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile
+
+- name: "Generating file for pool >>> {{item.host}}"
+  block:
+    - name: prepare pool JSON objects, copy the template file
+      delegate_to: localhost
+      shell: |
+        set -e
+        cp "files.input/bigip-gslb-pool.tmpl.json" "{{outfile}}"
+
+    - name: prepare pool JSON objects, parametrize the template file
+      delegate_to: localhost
+      replace:
+        path: "{{outfile}}"
+        regexp: "{{ inner.expr }}"
+        replace: "{{ inner.replace }}"
+      with_items:
+          - { expr: '%%poolGslbRecordNormalized%%', replace: "pool_{{ item.host | regex_replace('[-.]', '_') }}" }
+          - { expr: "'", replace: '"' }
+      loop_control:
+        loop_var: inner
+  when: check_outfile.stat.exists == false
+
+- name: "set query for HTTP pool monitors for host {{item.host }}"
+  set_fact:
+    query_pool_monitors: "[?(host == '{{item.host}}')].httpPaths"
+
+- name: "get HTTP monitor paths for host {{item.host }}"
+  set_fact:
+    paths: "{{ gslbState | json_query(query_pool_monitors) | flatten | unique }}"
+
+- name: "show HTTP monitor paths for host {{item.host }}"
+  debug:
+    msg: "{{paths}}"
+
+- name: "setting the monitors for each protocol"
+  include_tasks: pool_monitors.yaml
+  vars:
+    protocol: "http"
+  with_items: "{{ paths }}"
+  loop_control:
+    loop_var: path
+
+- name: "set query for HTTPS pool monitors for host {{item.host }}"
+  set_fact:
+    query_pool_monitors: "[?(host == '{{item.host}}')].httpsPaths"
+
+- name: "get HTTPS monitor paths for host {{item.host }}"
+  set_fact:
+    paths: "{{ gslbState | json_query(query_pool_monitors) | flatten | unique }}"
+
+- name: "setting the monitors for each protocol"
+  include_tasks: pool_monitors.yaml
+  vars:
+    protocol: "https"
+  with_items: "{{ paths }}"
+  loop_control:
+    loop_var: path
+
+- name: "Stat file {{outfile}}.included"
+  stat:
+    path: "{{outfile}}.included"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile_included
+
+- name: conditionally add virtual server JSON document
+  block:
+    - name: add pool JSON document
+      include_tasks: library/json-add-dict-element.yaml
+      vars:
+        node: "{{outfile}}"
+        branch: ".{{GSLB_DOMAIN | regex_replace('[-.]', '_')}}.Application"
+        leaf: ""
+        base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json"
+
+    - name: mark file as included
+      file:
+        path: "{{outfile}}.included"
+        state: touch
+  when: check_outfile_included.stat.exists == false
+
+- name: "set query for pool members for host {{ item.host }}"
+  set_fact:
+    query_pool_members: "[?(host == '{{item.host}}')].{host: host, ratio: ratio, l7router: l7router, publicAddress: publicAddress }"
+
+# TODO: when we consolidate all endpoints of a given hostname in a single gslbState entry the unique filter will no longer be needed
+- name: prepare the pool JSON object, create pool members
+  include_tasks: pool_l7router_loop.yaml
+  with_items: '{{ gslbState | json_query(query_pool_members) | unique }}'
+  loop_control:
+    loop_var: inner
+

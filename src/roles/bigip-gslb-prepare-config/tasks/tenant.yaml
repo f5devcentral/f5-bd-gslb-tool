@@ -1,0 +1,58 @@
+---
+
+- name: "Generating file name for tenant"
+  set_fact:
+    outfile: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-tenant.json"
+
+
+- name: "Stat file {{outfile}}"
+  stat: 
+    path: "{{outfile}}"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile
+
+- name: "Generating file for tenant"
+  block:
+    - name: prepare the tenant JSON object, copy the template file
+      delegate_to: localhost
+      shell: |
+        set -e
+        cp "files.input/bigip-gslb-tenant.tmpl.json" "{{outfile}}"
+
+    - name: prepare the tenant JSON object, parametrize the template file
+      delegate_to: localhost
+      replace:
+        path: "{{outfile}}"
+        regexp: "{{ inner.expr }}"
+        replace: "{{ inner.replace }}"
+      with_items:
+         - { expr: '%%tenantNormalized%%', replace: "{{ GSLB_DOMAIN | regex_replace('[-.]', '_') }}" }
+      loop_control:
+        loop_var: inner
+  when: check_outfile.stat.exists == false
+
+- name: "Stat file {{outfile}}.included"
+  stat:
+    path: "{{outfile}}.included"
+    get_checksum: no
+    get_mime: no
+  register: check_outfile_included
+
+- name: conditionally add tenant JSON document
+  block:
+    - name: add load balanced record to JSON document
+      include_tasks: library/json-add-dict-element.yaml
+      vars:
+        node: "{{outfile}}"
+        branch: "."
+        leaf: ""
+        base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json"
+
+    - name: mark file as included
+      file:
+        path: "{{outfile}}.included"
+        state: touch
+  when: check_outfile_included.stat.exists == false
+
+

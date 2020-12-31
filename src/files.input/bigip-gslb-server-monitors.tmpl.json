@@ -1,0 +1,15 @@
+       {
+            "monitor_tcp_80": {
+               "class": "GSLB_Monitor",
+               "monitorType": "tcp",
+               "label": "monitor_tcp_80",
+               "target": "*:80"
+            },
+            "monitor_tcp_443": {
+               "class": "GSLB_Monitor",
+               "monitorType": "tcp",
+               "label": "monitor_tcp_443",
+               "target": "*:443"
+            }
+       }
+

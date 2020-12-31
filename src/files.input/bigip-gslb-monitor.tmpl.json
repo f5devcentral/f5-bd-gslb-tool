@@ -1,0 +1,10 @@
+       {
+            "monitor_%%protocol%%_%%hostNormalized%%_%%pathNormalized%%": {
+               "class": "GSLB_Monitor",
+               "monitorType": "%%monitorType%%",
+               "label": "monitor_%%protocol%%_%%host%%%%path%%",
+               "send": "GET %%path%% HTTP/1.1\r\nHost: %%host%%.%%domain%%\r\nConnection: Close",
+               "target": "*:%%port%%"
+            }
+       }
+

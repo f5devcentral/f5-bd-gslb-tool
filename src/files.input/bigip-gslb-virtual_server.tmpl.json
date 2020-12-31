@@ -1,0 +1,7 @@
+			{ 
+                        "name": "%%virtual_server_name%%",
+                        "address": "%%publicAddress%%",
+                        "port": %%port%%,
+                        "monitors": []
+                    	}
+
