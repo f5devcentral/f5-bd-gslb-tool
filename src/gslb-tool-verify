@@ -35,15 +35,19 @@ echo
 
 ################################################################################################################################
 
-echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-echo ">>> gslb-tool-verify: Checking reachability and login credentials to F5 Cloud Services..."
-echo
+if egrep -q "^[[:space:]]backend[[:space:]]:[[:space:]]bigip" vars/setup.yaml; then
 
-ansible-playbook gslb-tool-verify-cloudservices.yaml
+  echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  echo ">>> gslb-tool-verify: Checking reachability and login credentials to F5 Cloud Services..."
+  echo
 
-echo 
-echo ">>> gslb-tool-verify: F5 Cloud Services check succesfull."
-echo
+  ansible-playbook gslb-tool-verify-cloudservices.yaml
+
+  echo 
+  echo ">>> gslb-tool-verify: F5 Cloud Services check succesfull."
+  echo
+
+fi
 
 ################################################################################################################################
 

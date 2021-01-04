@@ -1,14 +1,3 @@
-- name: OCP login
-  import_role:
-    name: k8s-login
-
 - name: Retrieve Routes from the default namespace
   import_role:
-    name: ocp-retrieve-routes
-
-- name: OCP logout
-  import_role:
-    name: k8s-logout
-
-
-
+    name: "k8s-retrieve-routes-{{resourceType[l7router]}}"
