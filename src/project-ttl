@@ -27,7 +27,3 @@ fi
 
 ansible-playbook -e "{ projectName: $1, ttl: $2 }" project-ttl.yaml
 
-# TODO: this should be more granular and only remove project's cached files
-echo "Invalidate the cache"
-rm -rf files.out/*
-

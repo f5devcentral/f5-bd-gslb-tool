@@ -1,7 +1,7 @@
 - name: "Initialize temporary folder for project {{projectName}}"
   delegate_to: localhost
   shell: |
-    rm -f files.output/backend-{{GSLB_DOMAIN}}/*
-    [ -d files.output/backend-{{GSLB_DOMAIN}} ] && rmdir files.output/backend-{{GSLB_DOMAIN}}
-    mkdir -p files.output/backend-{{GSLB_DOMAIN}}
+    rm -rf files.output/backend-{{GSLB_DOMAIN}}/{{projectName}}
+#    [ -d files.output/backend-{{GSLB_DOMAIN}} ]&& rmdir files.output/backend-{{GSLB_DOMAIN}}
+#    mkdir -p files.output/backend-{{GSLB_DOMAIN}}
 

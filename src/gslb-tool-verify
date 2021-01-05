@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: verify bigip backend is operational, this includes atc login and as3 availability
+
 set -e
 
 ################################################################################################################################

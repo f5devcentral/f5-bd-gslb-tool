@@ -3,6 +3,7 @@
 - name: "initialize folder for GSLB_DOMAIN {{GSLB_DOMAIN}}"
   delegate_to: localhost
   shell: |
+    rm -rf files.output/*
     mkdir -p files.output/backend-{{GSLB_DOMAIN}}
     rm -f files.output/backend-{{GSLB_DOMAIN}}/*.included
     cp files.input/f5aas-gslb-update-subscription.tmpl.json files.output/backend-{{GSLB_DOMAIN}}

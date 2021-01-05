@@ -4,6 +4,7 @@
     - "vars/setup.yaml"
     - "vars/gslbState.uncommited.yaml"
   roles: 
+    - gslb-tool-init-project-folder
     - { role: gslb-tool-eliminate-project, l7router: "{{dstOcpAlias}}" }
     - gslb-tool-populate-project
 

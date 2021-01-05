@@ -1,12 +1,12 @@
 
 ---
 
-- name: "pool_l7router_loop.yaml: show iterator"
+- name: ">>>> pool_l7router_loop.yaml: show iterator"
   debug:
     msg: "pool_l7router_loop.yaml: iterator is {{inner}}"
   when: VERBOSE == "true"
 
-- name: "loop for preparing pool member JSON objects, for l7router {{inner.l7router}}"
+- name: ">>>> loop for preparing pool member JSON objects, for l7router {{inner.l7router}}"
   include_tasks: pool_l7router_members.yaml
   with_items: "{{ inner.publicAddress }}"
   loop_control:

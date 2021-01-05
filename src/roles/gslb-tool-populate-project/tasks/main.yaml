@@ -53,7 +53,7 @@
     set -e
     set -x
 
-    jq '.[].l7router |= sub(".*"; "{{dstOcpAlias}}") | .[].publicAddress = {{publicAddress[dstOcpAlias] | to_json}} | .[].ratio |=sub(".*" ; "{{average_populate_ratio}}")' < files.output/states-{{GSLB_DOMAIN}}/{{projectName}}.{{srcOcpAlias}} > files.output/backend-{{GSLB_DOMAIN}}/{{projectName}}.{{dstOcpAlias}}
+    jq '.[].l7router |= sub(".*"; "{{dstOcpAlias}}") | .[].publicAddress = {{publicAddress[dstOcpAlias] | to_json}} | .[].ratio |=sub(".*" ; "{{average_populate_ratio}}")' < files.output/states-{{GSLB_DOMAIN}}/{{projectName}}.{{srcOcpAlias}} > files.output/states-{{GSLB_DOMAIN}}/{{projectName}}.{{dstOcpAlias}}
 
   register: output
 

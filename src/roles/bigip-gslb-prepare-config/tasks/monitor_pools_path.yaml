@@ -6,7 +6,7 @@
 
 - name: "Generating file name for monitor >>> {{protocol}} >> {{item.host}} > {{pathNormalized}}"
   set_fact:
-    outfile: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-monitor_{{protocol}}_{{item.host}}_{{pathNormalized}}.json"
+    outfile: "files.output/backend-{{GSLB_DOMAIN}}/{{item.project}}/bigip-gslb-monitor_{{protocol}}_{{item.host}}_{{pathNormalized}}.json"
 
 - name: "Stat file {{outfile}}"
   stat: 

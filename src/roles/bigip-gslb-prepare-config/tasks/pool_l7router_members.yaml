@@ -1,25 +1,25 @@
 ---
 
-- name: "Generating file name for pool member >>> {{inner.host}} >> {{inner.l7router}} > {{address_item}}"
+- name: ">>>>> Generating file name for pool member >>> {{inner.host}} >> {{inner.l7router}} > {{address_item}}"
   set_fact:
-    outfile: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-pool_member.{{inner.host}}.{{inner.l7router}}.{{address_item}}.json"
+    outfile: "files.output/backend-{{GSLB_DOMAIN}}/{{item.project}}/bigip-gslb-pool_member.{{inner.host}}.{{inner.l7router}}.{{address_item}}.json"
 
-- name: "Stat file {{outfile}}"
+- name: ">>>>> Stat file {{outfile}}"
   stat: 
     path: "{{outfile}}"
     get_checksum: no
     get_mime: no
   register: check_outfile
 
-- name: "Generating file for virtual >>> {{item.l7router}} >> {{address_item}}"
+- name: ">>>>> Generating file for virtual >>> {{item.l7router}} >> {{address_item}}"
   block:
-    - name: prepare pool member JSON object, copy the template file
+    - name: ">>>>>> prepare pool member JSON object, copy the template file"
       delegate_to: localhost
       shell: |
         set -e
         cp "files.input/bigip-gslb-pool_member.tmpl.json" "{{outfile}}"
 
-    - name: prepare the pool member JSON object, parametrize the template file
+    - name: ">>>>>> prepare the pool member JSON object, parametrize the template file"
       delegate_to: localhost
       replace:
         path: "{{outfile}}"
@@ -33,24 +33,23 @@
         loop_var: inner2
   when: check_outfile.stat.exists == false
 
-- name: "Stat file {{outfile}}.included"
+- name: ">>>>> Stat file {{outfile}}.included"
   stat:
     path: "{{outfile}}.included"
     get_checksum: no
     get_mime: no
   register: check_outfile_included
 
-- name: conditionally add pool member JSON document
+- name: ">>>>> conditionally add pool member into pool JSON document"
   block:
-    - name: add pool member to JSON document
-      include_tasks: library/json-add-dict-element.yaml
+    - name: ">>>>>> add pool member to JSON document"
+      include_tasks: library/json-add-array-element.yaml
       vars:
         node: "{{outfile}}"
-        branch: ".{{ GSLB_DOMAIN | regex_replace('[-.]', '_') }}.Application.pool_{{ item.host | regex_replace('[-.]', '_') }}.members"
-        leaf: ""
-        base: "files.output/backend-{{GSLB_DOMAIN}}/bigip-gslb-update-config.tmpl.json"
+        branch: ".{{poolGslbRecordNormalized}}.members"
+        base: "files.output/backend-{{GSLB_DOMAIN}}/{{item.project}}/bigip-gslb-pool_{{item.host}}.json"
 
-    - name: mark file as included
+    - name: ">>>>>> mark file as included"
       file:
         path: "{{outfile}}.included"
         state: touch

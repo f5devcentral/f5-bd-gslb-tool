@@ -1,6 +1,6 @@
 ---
 
-- name: add server monitors JSON document
+- name: ">> add server monitors JSON document"
   include_tasks: library/json-add-dict-element.yaml
   vars:
     node: "files.input/bigip-gslb-server-monitors.tmpl.json"

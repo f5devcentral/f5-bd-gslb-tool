@@ -1,7 +1,7 @@
 ---
 
 
-- name: "loop for preparing virtual server JSON objects, for l7router {{item.l7router}}"
+- name: ">> loop for preparing virtual server JSON objects, for l7router {{item.l7router}}"
   include_tasks: virtual_server.yaml
   with_items: "{{ item.publicAddress }}"
   loop_control:

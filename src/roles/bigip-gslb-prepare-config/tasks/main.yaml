@@ -1,53 +1,61 @@
 ---
 
-- name: "initialize folder for GSLB_DOMAIN {{GSLB_DOMAIN}}"
-  delegate_to: localhost
-  shell: |
-    mkdir -p files.output/backend-{{GSLB_DOMAIN}}
-    rm -f files.output/backend-{{GSLB_DOMAIN}}/*.included
-    cp files.input/bigip-gslb-update-config.tmpl.json files.output/backend-{{GSLB_DOMAIN}}
-
-- name: set convinience variables
-  set_fact: 
+- name: "> set convinience variables"
+  set_fact:
     single_quote: "'"
 
-- name: build query expression for gslb variable
+- name: "> build query expression for gslb variable"
   set_fact:
     query_expression: "*"
 
-- name: add GSLBServer JSON objects
+- name: "> initialize folder for GSLB_DOMAIN {{GSLB_DOMAIN}}"
+  delegate_to: localhost
+  shell: |
+    rm -f files.output/backend-{{GSLB_DOMAIN}}/*.included files.output/backend-{{GSLB_DOMAIN}}/*/*.included
+    mkdir -p files.output/backend-{{GSLB_DOMAIN}}
+    cp files.input/bigip-gslb-update-config.tmpl.json files.output/backend-{{GSLB_DOMAIN}}
+
+- name: "> create folders for all projects"
+  file:
+    path: "files.output/backend-{{GSLB_DOMAIN}}/{{item.project}}"
+    state: directory
+  with_items: '{{gslbState | json_query(query) | unique}}'
+  vars:
+    query: "[?({{query_expression}})].{ project: project }"
+
+- name: "> add GSLBServer JSON objects"
   include_tasks: gslb_server_l7router_loop.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ l7router: l7router, publicAddress: publicAddress }"
+    query: "[?({{query_expression}})].{ l7router: l7router, publicAddress: publicAddress, project: project }"
 
-- name: add virtualServer JSON objects
+- name: "> add virtualServer JSON objects"
   include_tasks: virtual_server_l7router_loop.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ l7router: l7router, publicAddress: publicAddress, host: host }"
+    query: "[?({{query_expression}})].{ l7router: l7router, publicAddress: publicAddress, host: host, project: project }"
 
-- name: add tenant JSON object
+- name: "> add tenant JSON object"
   include_tasks: tenant.yaml
 
-- name: add load balanced record JSON objects
+- name: "> add load balanced record JSON objects"
   include_tasks: load_balanced_record.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ host: host }"
+    query: "[?({{query_expression}})].{ host: host, project: project }"
 
-- name: add pools
+- name: "> add pools"
   include_tasks: pool.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ host: host, l7router: l7router, ttl: ttl }"
+    query: "[?({{query_expression}})].{ host: host, l7router: l7router, ttl: ttl, project: project }"
 
-- name: add monitors for pools JSON objects 
+- name: "> add monitors for pools JSON objects"
   include_tasks: monitor_pools.yaml
   with_items: '{{ gslbState | json_query(query) | unique}}'
   vars:
-    query: "[?({{query_expression}})].{ host: host, httpPaths: httpPaths, httpsPaths: httpsPaths }"
+    query: "[?({{query_expression}})].{ host: host, httpPaths: httpPaths, httpsPaths: httpsPaths, project: project }"
 
-- name: add monitors for servers JSON objects
+- name: "> add monitors for servers JSON objects"
   include_tasks: monitor_servers.yaml
 
