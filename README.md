@@ -7,7 +7,7 @@ Welcome to the **GSLB tool** project! This README is an introduction to the proj
 
 * [F5 BIG-IP](https://www.f5.com/products/big-ip-services/big-ip-dns)'s DNS LB. This is a module for BIG-IP which can (likewise all BIG-IP functionalities) run in either physical or VM appliances (aka BIG-IP VE). **For the general case, at present it is recommended to use this option because of its maturity and enhanced monitoring capabilities**.
 
-Other backends can be added.
+Other backends for other DNS implementations or DNS SaaS offferings can be added.
 
 Please note that **GSLB tool is not tied to any specific Openshfit Router (or Kubernetes Ingress) implementation**. GSLB tool can use either RedHat's default Router implementation, BIG-IP, any other implementation or a combination of these.
 
