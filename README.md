@@ -3,12 +3,11 @@ Welcome to the **GSLB tool** project! This README is an introduction to the proj
 
 # Introduction
 
-**GSLB tool allows the automatic creation of GSLB DNS entries for Ingress/Route Kubernetes/Openshift published applications**. The following backends are supported:
+**GSLB tool allows the automatic creation of GSLB DNS entries for Ingress/Route Kubernetes/Openshift published applications**. At present the tool supports the following backend:
 
-* [F5 CloudServices](https://clouddocs.f5.com/cloud-services/latest/)' DNS LB. This is a SaaS offering thus allowing to provision GSLB in minutes without having to deploy GSLB servers.
 * [F5 BIG-IP](https://www.f5.com/products/big-ip-services/big-ip-dns)'s DNS LB. This is a module for BIG-IP which can (likewise all BIG-IP functionalities) run in either physical or VM appliances (aka BIG-IP VE). **For the general case, at present it is recommended to use this option because of its maturity and enhanced monitoring capabilities**.
 
-**Verify that this GSLB solution suits your environment without any commitment**. You can try this tool and CloudService's in your existing production infrastructure **safely** without any change into your existing deployments.
+Other backends can be added.
 
 Please note that **GSLB tool is not tied to any specific Openshfit Router (or Kubernetes Ingress) implementation**. GSLB tool can use either RedHat's default Router implementation, BIG-IP, any other implementation or a combination of these.
 
