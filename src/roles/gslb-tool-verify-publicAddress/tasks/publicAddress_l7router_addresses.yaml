@@ -10,7 +10,7 @@
   with_items: "{{ publicAddress[inner][inner2] }}"
   loop_control:
     loop_var: inner3
-  when: ROUTES_TYPE == "http"
+  when: ROUTES_TYPE is not defined or ROUTES_TYPE == "http"
 
 - name: "Check if we can connect with HTTPS"
   uri:
@@ -20,6 +20,6 @@
   with_items: "{{ publicAddress[inner][inner2] }}"
   loop_control:
     loop_var: inner3
-  when: ROUTES_TYPE == "https"
+  when: ROUTES_TYPE is not defined or ROUTES_TYPE == "https"
 
 
